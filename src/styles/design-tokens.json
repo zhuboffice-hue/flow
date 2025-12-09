@@ -1,0 +1,39 @@
+{
+    "grid": 8,
+    "typography": {
+        "family": "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+        "sizes": {
+            "h1": "28px",
+            "h2": "22px",
+            "h3": "18px",
+            "body": "16px",
+            "small": "14px"
+        },
+        "weights": {
+            "regular": 400,
+            "medium": 500,
+            "semibold": 600
+        }
+    },
+    "colors": {
+        "background": "#F7F8FA",
+        "surface": "#FFFFFF",
+        "border": "#E5E7EB",
+        "text_primary": "#0F172A",
+        "text_secondary": "#475569",
+        "muted": "#94A3B8",
+        "accent_primary": "#3B82F6",
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "danger": "#EF4444"
+    },
+    "radius": {
+        "sm": "4px",
+        "md": "8px",
+        "lg": "12px"
+    },
+    "shadows": {
+        "sm": "0 1px 3px rgba(0,0,0,0.08)",
+        "md": "0 4px 12px rgba(0,0,0,0.08)"
+    }
+}
