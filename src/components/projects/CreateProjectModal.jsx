@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { initialProjectState, PROJECT_TYPES, CURRENCIES, VISIBILITY_OPTIONS, CURRENCY_OPTIONS } from '../../lib/models';
 import Modal from '../ui/Modal';
@@ -10,39 +10,53 @@ import SearchableSelect from '../ui/SearchableSelect';
 import MultiSelect from '../ui/MultiSelect';
 import TextArea from '../ui/TextArea';
 import { useCurrency } from '../../hooks/useCurrency';
+import { useAuth } from '../../context/AuthContext';
 
 const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) => {
-    const { currency: companyCurrency } = useCurrency(); // Get company currency
+    const { currentUser } = useAuth(); // Get currentUser
+    const { currency: companyCurrency } = useCurrency();
     const [newProject, setNewProject] = useState(initialProjectState);
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState([]);
     const [users, setUsers] = useState([]);
 
     React.useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || !currentUser?.companyId) return;
 
         // If editing an existing project, populate state
         if (project) {
             setNewProject({
                 ...initialProjectState,
                 ...project,
-                // Ensure date strings are handled correctly if needed, though they usually bind directly to input date
             });
         } else {
             setNewProject({
                 ...initialProjectState,
-                currency: companyCurrency // Default to company currency
+                currency: companyCurrency
             });
         }
 
         const fetchData = async () => {
             try {
-                // Fetch Clients
-                const clientsSnap = await getDocs(collection(db, 'clients'));
+                // Fetch Clients (Filtered)
+                const clientsQ = query(collection(db, 'clients'), where('companyId', '==', currentUser.companyId));
+                const clientsSnap = await getDocs(clientsQ);
                 setClients(clientsSnap.docs.map(d => ({ id: d.id, name: d.data().name })));
 
-                // Fetch Users for Team/Manager
-                const usersSnap = await getDocs(collection(db, 'users'));
+                // Fetch Users for Team/Manager (Filtered)
+                // Assuming users collection has companyId? Actually users are in 'users' collection with 'companyId' field.
+                // Wait, users collection structure: doc(db, 'users', uid).
+                // So we need to query 'users' collection where companyId matches.
+                // Or maybe 'employees' collection? The original code fetched from 'users'.
+                // Let's check 'users' collection structure in AuthContext. Yes, users have companyId.
+                const usersQ = query(collection(db, 'users'), where('companyId', '==', currentUser.companyId));
+                // However, we might want to fetch from 'employees' instead for the team list, as 'users' are auth accounts.
+                // The original code used 'users'. Let's stick to 'users' but filtering by companyId is safer.
+                // Actually, 'employees' collection seems to be the one used in Team.jsx.
+                // Let's check if 'users' collection is queryable by companyId. Yes index might be needed.
+                // For now, let's use 'employees' if possible, but if not, 'users' with filter.
+                // Given the original code used 'users', let's stick to it but adding filter.
+                const usersSnap = await getDocs(usersQ);
                 setUsers(usersSnap.docs.map(d => ({
                     id: d.id,
                     name: d.data().displayName || d.data().name || d.data().email
@@ -52,7 +66,7 @@ const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) =
             }
         };
         fetchData();
-    }, [isOpen, project, companyCurrency]);
+    }, [isOpen, project, companyCurrency, currentUser]);
 
     const handleChange = (field, value) => {
         setNewProject(prev => ({ ...prev, [field]: value }));
@@ -67,6 +81,7 @@ const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) =
             const projectData = {
                 ...newProject,
                 clientId: finalClientId,
+                companyId: currentUser.companyId, // Add companyId
                 updatedAt: new Date()
             };
 

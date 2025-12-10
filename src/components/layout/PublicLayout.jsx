@@ -3,34 +3,67 @@ import { Link, Outlet } from 'react-router-dom';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 
-const Navbar = () => (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-            <Link to="/" className="flex items-center gap-2">
-                <div className="bg-primary rounded-md p-1">
-                    <Icon name="Layers" className="text-white" size={20} />
+const Navbar = () => {
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+    return (
+        <nav className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+                <Link to="/" className="flex items-center gap-2">
+                    <div className="bg-primary rounded-md p-1">
+                        <Icon name="Layers" className="text-white" size={20} />
+                    </div>
+                    <span className="text-h3 font-bold text-text-primary">FLOW</span>
+                </Link>
+
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center gap-6 text-small font-medium text-text-secondary">
+                    <Link to="/features" className="hover:text-text-primary transition-colors">Features</Link>
+                    <Link to="/pricing" className="hover:text-text-primary transition-colors">Pricing</Link>
+                    <Link to="/about" className="hover:text-text-primary transition-colors">About</Link>
+                    <Link to="/contact" className="hover:text-text-primary transition-colors">Contact</Link>
                 </div>
-                <span className="text-h3 font-bold text-text-primary">FLOW</span>
-            </Link>
 
-            <div className="hidden md:flex items-center gap-6 text-small font-medium text-text-secondary">
-                <Link to="/features" className="hover:text-text-primary transition-colors">Features</Link>
-                <Link to="/pricing" className="hover:text-text-primary transition-colors">Pricing</Link>
-                <Link to="/about" className="hover:text-text-primary transition-colors">About</Link>
-                <Link to="/contact" className="hover:text-text-primary transition-colors">Contact</Link>
+                <div className="hidden md:flex items-center gap-3">
+                    <Link to="/login">
+                        <Button variant="ghost" size="sm">Log in</Button>
+                    </Link>
+                    <Link to="/pricing">
+                        <Button size="sm">Get Started</Button>
+                    </Link>
+                </div>
+
+                {/* Mobile Menu Button */}
+                <button
+                    className="md:hidden p-2 text-text-primary"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                    <Icon name={isMenuOpen ? "X" : "Menu"} size={24} />
+                </button>
             </div>
 
-            <div className="flex items-center gap-3">
-                <Link to="/login">
-                    <Button variant="ghost" size="sm">Log in</Button>
-                </Link>
-                <Link to="/pricing">
-                    <Button size="sm">Get Started</Button>
-                </Link>
-            </div>
-        </div>
-    </nav>
-);
+            {/* Mobile Navigation */}
+            {isMenuOpen && (
+                <div className="md:hidden border-t border-border bg-surface px-4 py-4 shadow-lg">
+                    <div className="flex flex-col space-y-4 text-center">
+                        <Link to="/features" className="text-text-secondary hover:text-text-primary font-medium py-2" onClick={() => setIsMenuOpen(false)}>Features</Link>
+                        <Link to="/pricing" className="text-text-secondary hover:text-text-primary font-medium py-2" onClick={() => setIsMenuOpen(false)}>Pricing</Link>
+                        <Link to="/about" className="text-text-secondary hover:text-text-primary font-medium py-2" onClick={() => setIsMenuOpen(false)}>About</Link>
+                        <Link to="/contact" className="text-text-secondary hover:text-text-primary font-medium py-2" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+                        <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                            <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                                <Button variant="ghost" className="w-full">Log in</Button>
+                            </Link>
+                            <Link to="/pricing" onClick={() => setIsMenuOpen(false)}>
+                                <Button className="w-full">Get Started</Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </nav>
+    );
+};
 
 const Footer = () => (
     <footer className="border-t border-border bg-surface">

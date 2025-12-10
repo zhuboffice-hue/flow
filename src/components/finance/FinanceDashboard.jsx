@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Icon from '../ui/Icon';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -27,6 +28,7 @@ const KPICard = ({ label, value, trend, trendValue, icon, color }) => (
 );
 
 const FinanceDashboard = () => {
+    const { currentUser } = useAuth();
     const { formatCurrency, convertAmount, currency } = useCurrency();
     const [stats, setStats] = useState({
         revenue: 0,
@@ -40,8 +42,10 @@ const FinanceDashboard = () => {
     const [projects, setProjects] = useState({});
 
     useEffect(() => {
+        if (!currentUser?.companyId) return;
+
         // Fetch Projects
-        const qProjects = collection(db, 'projects');
+        const qProjects = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
         const unsubscribeProjects = onSnapshot(qProjects, (snapshot) => {
             const projMap = {};
             snapshot.docs.forEach(doc => {
@@ -51,16 +55,28 @@ const FinanceDashboard = () => {
         });
 
         // Fetch Invoices
-        const qInvoices = query(collection(db, 'invoices'), orderBy('createdAt', 'desc'));
+        const qInvoices = query(collection(db, 'invoices'), where('companyId', '==', currentUser.companyId));
         const unsubscribeInvoices = onSnapshot(qInvoices, (snapshot) => {
             const loadedInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sort
+            loadedInvoices.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA;
+            });
             setInvoices(loadedInvoices);
         });
 
         // Fetch Expenses
-        const qExpenses = query(collection(db, 'expenses'), orderBy('createdAt', 'desc'));
+        const qExpenses = query(collection(db, 'expenses'), where('companyId', '==', currentUser.companyId));
         const unsubscribeExpenses = onSnapshot(qExpenses, (snapshot) => {
             const loadedExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sort
+            loadedExpenses.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA;
+            });
             setExpenses(loadedExpenses);
         });
 
@@ -69,7 +85,7 @@ const FinanceDashboard = () => {
             unsubscribeInvoices();
             unsubscribeExpenses();
         };
-    }, []);
+    }, [currentUser]);
 
     // Calculate Stats whenever data or currency changes
     useEffect(() => {

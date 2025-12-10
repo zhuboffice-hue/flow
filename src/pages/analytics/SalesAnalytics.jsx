@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/ThreePaneLayout';
 import Icon from '../../components/ui/Icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 
 const KPICard = ({ title, value, change, trend, icon, color }) => (
@@ -29,6 +30,7 @@ const KPICard = ({ title, value, change, trend, icon, color }) => (
 );
 
 const SalesAnalytics = () => {
+    const { currentUser } = useAuth();
     const { formatCurrency, convertAmount } = useCurrency();
     const [loading, setLoading] = useState(true);
     const [kpiData, setKpiData] = useState({
@@ -46,9 +48,11 @@ const SalesAnalytics = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!currentUser?.companyId) return;
             try {
                 setLoading(true);
-                const leadsSnap = await getDocs(collection(db, 'leads'));
+                const qLeads = query(collection(db, 'leads'), where('companyId', '==', currentUser.companyId));
+                const leadsSnap = await getDocs(qLeads);
                 const leads = leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // --- Calculate KPIs ---
@@ -122,7 +126,7 @@ const SalesAnalytics = () => {
         };
 
         fetchData();
-    }, [convertAmount]);
+    }, [convertAmount, currentUser]);
 
     if (loading) {
         return (

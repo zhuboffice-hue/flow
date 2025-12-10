@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../ui/Icon';
@@ -31,8 +31,10 @@ const CreateLeadModal = ({ isOpen, onClose, onSuccess }) => { // Changed props
             setFormData(prev => ({ ...prev, currency: companyCurrency })); // Default to company currency
 
             const fetchEmployees = async () => {
+                if (!currentUser?.companyId) return;
                 try {
-                    const querySnapshot = await getDocs(collection(db, 'employees'));
+                    const q = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
+                    const querySnapshot = await getDocs(q);
                     const list = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setEmployees(list);
                 } catch (error) {
@@ -41,7 +43,7 @@ const CreateLeadModal = ({ isOpen, onClose, onSuccess }) => { // Changed props
             };
             fetchEmployees();
         }
-    }, [isOpen, companyCurrency]);
+    }, [isOpen, companyCurrency, currentUser]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -54,6 +56,7 @@ const CreateLeadModal = ({ isOpen, onClose, onSuccess }) => { // Changed props
         try {
             await addDoc(collection(db, 'leads'), {
                 ...formData,
+                companyId: currentUser.companyId,
                 createdAt: serverTimestamp(),
                 createdBy: currentUser?.uid || 'unknown'
             });

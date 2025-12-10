@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../ui/Icon';
 import Button from '../ui/Button';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 import { CURRENCY_OPTIONS } from '../../lib/models';
 
 const AddExpenseModal = ({ isOpen, onClose }) => {
+    const { currentUser } = useAuth();
     const { currency: companyCurrency, getCurrencySymbol } = useCurrency();
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -17,12 +19,26 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
         projectId: '',
         notes: ''
     });
+    const [projects, setProjects] = useState([]);
 
     useEffect(() => {
         if (isOpen) {
             setFormData(prev => ({ ...prev, currency: companyCurrency }));
+
+            // Fetch projects for dropdown
+            const fetchProjects = async () => {
+                if (!currentUser?.companyId) return;
+                try {
+                    const q = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                    const snap = await getDocs(q);
+                    setProjects(snap.docs.map(d => ({ id: d.id, name: d.data().name })));
+                } catch (error) {
+                    console.error("Error fetching projects:", error);
+                }
+            };
+            fetchProjects();
         }
-    }, [isOpen, companyCurrency]);
+    }, [isOpen, companyCurrency, currentUser]);
 
     if (!isOpen) return null;
 
@@ -31,6 +47,7 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
         try {
             const expenseData = {
                 ...formData,
+                companyId: currentUser.companyId,
                 createdAt: new Date()
             };
             await addDoc(collection(db, 'expenses'), expenseData);
@@ -130,8 +147,9 @@ const AddExpenseModal = ({ isOpen, onClose }) => {
                                 onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
                             >
                                 <option value="">None</option>
-                                <option value="1">Website Redesign</option>
-                                <option value="2">Mobile App</option>
+                                {projects.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
                             </select>
                         </div>
                         <div>

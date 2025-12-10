@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, where, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import ThreePaneLayout from '../components/layout/ThreePaneLayout';
 import FileSidebar from '../components/files/FileSidebar';
@@ -14,6 +15,7 @@ import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 
 const Files = () => {
+    const { currentUser } = useAuth();
     const [files, setFiles] = useState([]);
     const [viewMode, setViewMode] = useState('grid');
     const [currentFolder, setCurrentFolder] = useState(null); // null = root
@@ -41,11 +43,12 @@ const Files = () => {
 
     // Fetch Files (current folder content)
     useEffect(() => {
-        let q = query(collection(db, 'files'), where('parentId', '==', currentFolder));
+        if (!currentUser?.companyId) return;
+        let q = query(collection(db, 'files'), where('companyId', '==', currentUser.companyId), where('parentId', '==', currentFolder));
 
         // Simple category filtering (client-side for now or advanced query later)
         if (activeCategory === 'deliverables') {
-            q = query(collection(db, 'files'), where('isDeliverable', '==', true));
+            q = query(collection(db, 'files'), where('companyId', '==', currentUser.companyId), where('isDeliverable', '==', true));
         }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -54,17 +57,18 @@ const Files = () => {
         });
 
         return () => unsubscribe();
-    }, [currentFolder, activeCategory]);
+    }, [currentFolder, activeCategory, currentUser]);
 
     // Fetch All Folders for Sidebar Tree
     useEffect(() => {
-        const q = query(collection(db, 'files'), where('type', '==', 'folder'));
+        if (!currentUser?.companyId) return;
+        const q = query(collection(db, 'files'), where('companyId', '==', currentUser.companyId), where('type', '==', 'folder'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const folders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setAllFolders(folders);
         });
         return () => unsubscribe();
-    }, []);
+    }, [currentUser]);
 
     const handleFolderClick = (folder) => {
         setCurrentFolder(folder.id);
@@ -91,9 +95,10 @@ const Files = () => {
                     size: (file.size / 1024).toFixed(2) + ' KB',
                     url: downloadURL,
                     parentId: currentFolder,
+                    companyId: currentUser.companyId,
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    createdBy: 'current-user', // TODO: Use actual user ID
+                    createdBy: currentUser.uid,
                     isDeliverable: false // Default
                 });
             } catch (error) {
@@ -159,9 +164,10 @@ const Files = () => {
                 type: 'folder',
                 size: '-',
                 parentId: currentFolder,
+                companyId: currentUser.companyId,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                createdBy: 'current-user'
+                createdBy: currentUser.uid
             });
             setIsNewFolderModalOpen(false);
             setNewFolderName('');

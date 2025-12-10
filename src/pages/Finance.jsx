@@ -5,21 +5,27 @@ import Icon from '../components/ui/Icon';
 import FinanceDashboard from '../components/finance/FinanceDashboard';
 import InvoicesList from '../components/finance/InvoicesList';
 import ExpensesList from '../components/finance/ExpensesList';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 import { useNavigate } from 'react-router-dom';
 
 const Finance = () => {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [exporting, setExporting] = useState(false);
 
     const handleExportReport = async () => {
+        if (!currentUser?.companyId) return;
         setExporting(true);
         try {
-            const invoicesSnap = await getDocs(collection(db, 'invoices'));
-            const expensesSnap = await getDocs(collection(db, 'expenses'));
+            const invoicesQ = query(collection(db, 'invoices'), where('companyId', '==', currentUser.companyId));
+            const expensesQ = query(collection(db, 'expenses'), where('companyId', '==', currentUser.companyId));
+
+            const invoicesSnap = await getDocs(invoicesQ);
+            const expensesSnap = await getDocs(expensesQ);
 
             const invoices = invoicesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             const expenses = expensesSnap.docs.map(d => ({ id: d.id, ...d.data() }));

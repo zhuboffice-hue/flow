@@ -1,5 +1,6 @@
-import { collection, onSnapshot, query, orderBy, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, updateDoc, deleteDoc, doc, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
@@ -7,6 +8,7 @@ import Icon from '../ui/Icon';
 import Badge from '../ui/Badge';
 
 const InvoicesList = () => {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [filterStatus, setFilterStatus] = useState('All');
     const [editingStatusId, setEditingStatusId] = useState(null); // ID of invoice whose status is being edited
@@ -16,18 +18,28 @@ const InvoicesList = () => {
     const [projects, setProjects] = useState({});
 
     useEffect(() => {
+        if (!currentUser?.companyId) return;
+
         // Fetch Invoices
-        const q = query(collection(db, 'invoices'), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, 'invoices'), where('companyId', '==', currentUser.companyId));
         const unsubscribeInvoices = onSnapshot(q, (snapshot) => {
             const invoicesData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            // Client-side sort
+            invoicesData.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA; // Descending
+            });
             setInvoices(invoicesData);
         });
 
         // Fetch Clients
-        const unsubscribeClients = onSnapshot(collection(db, 'clients'), (snapshot) => {
+        // Fetch Clients
+        const qClients = query(collection(db, 'clients'), where('companyId', '==', currentUser.companyId));
+        const unsubscribeClients = onSnapshot(qClients, (snapshot) => {
             const clientsMap = {};
             snapshot.docs.forEach(doc => {
                 clientsMap[doc.id] = doc.data().name;
@@ -36,7 +48,9 @@ const InvoicesList = () => {
         });
 
         // Fetch Projects
-        const unsubscribeProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
+        // Fetch Projects
+        const qProjects = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+        const unsubscribeProjects = onSnapshot(qProjects, (snapshot) => {
             const projectsMap = {};
             snapshot.docs.forEach(doc => {
                 projectsMap[doc.id] = doc.data().name;
@@ -49,7 +63,7 @@ const InvoicesList = () => {
             unsubscribeClients();
             unsubscribeProjects();
         };
-    }, []);
+    }, [currentUser]);
 
     const handleStatusUpdate = async (invoiceId, newStatus) => {
         try {

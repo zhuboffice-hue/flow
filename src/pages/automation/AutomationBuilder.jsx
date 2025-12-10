@@ -63,6 +63,7 @@ const AutomationBuilder = () => {
         try {
             const data = {
                 ...formData,
+                companyId: currentUser.companyId,
                 updatedAt: serverTimestamp(),
                 ownerId: currentUser?.uid
             };

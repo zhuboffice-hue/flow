@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import ThreePaneLayout from '../components/layout/ThreePaneLayout';
@@ -9,6 +10,7 @@ import Button from '../components/ui/Button';
 import Icon from '../components/ui/Icon';
 
 const Calendar = () => {
+    const { currentUser } = useAuth();
     const [events, setEvents] = useState([]);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -23,7 +25,9 @@ const Calendar = () => {
 
     // Fetch Calendar Events
     useEffect(() => {
-        const unsubscribeEvents = onSnapshot(collection(db, 'calendarEvents'), (snapshot) => {
+        if (!currentUser?.companyId) return;
+        const q = query(collection(db, 'calendarEvents'), where('companyId', '==', currentUser.companyId));
+        const unsubscribeEvents = onSnapshot(q, (snapshot) => {
             const fetchedEvents = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
@@ -40,13 +44,15 @@ const Calendar = () => {
         });
 
         return () => unsubscribeEvents();
-    }, []);
+    }, [currentUser]);
 
     // Fetch Projects for Deadlines
     useEffect(() => {
         const fetchProjects = async () => {
+            if (!currentUser?.companyId) return;
             try {
-                const snapshot = await getDocs(collection(db, 'projects'));
+                const q = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                const snapshot = await getDocs(q);
                 const projectEvents = snapshot.docs
                     .map(doc => {
                         const data = doc.data();
@@ -89,7 +95,7 @@ const Calendar = () => {
         };
 
         fetchProjects();
-    }, []);
+    }, [currentUser]);
 
     const handleEventClick = (event) => {
         setSelectedEvent(event);

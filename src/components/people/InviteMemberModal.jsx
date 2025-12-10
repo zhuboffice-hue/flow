@@ -44,6 +44,7 @@ const InviteMemberModal = ({ isOpen, onClose, onSuccess }) => {
             // Also create employee record as 'Invited'
             await addDoc(collection(db, 'employees'), {
                 ...formData,
+                companyId: currentUser.companyId,
                 status: 'Invited',
                 joinedAt: new Date(),
                 avatar: null,

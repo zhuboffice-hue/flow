@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import ThreePaneLayout from '../../components/layout/ThreePaneLayout';
 import Table from '../../components/ui/Table';
@@ -9,8 +9,10 @@ import Icon from '../../components/ui/Icon';
 import Badge from '../../components/ui/Badge';
 import Avatar from '../../components/ui/Avatar';
 import ClientFormModal from '../../components/clients/ClientFormModal';
+import { useAuth } from '../../context/AuthContext';
 
 const ClientsDirectory = () => {
+    const { currentUser } = useAuth();
     const [clients, setClients] = useState([]);
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,12 +20,15 @@ const ClientsDirectory = () => {
     const [selectedClient, setSelectedClient] = useState(null);
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'clients'), (snapshot) => {
+        if (!currentUser?.companyId) return;
+
+        const q = query(collection(db, 'clients'), where('companyId', '==', currentUser.companyId));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const clientsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setClients(clientsData);
         });
         return () => unsubscribe();
-    }, []);
+    }, [currentUser]);
 
     const handleSaveClient = async (clientData) => {
         try {
@@ -34,6 +39,7 @@ const ClientsDirectory = () => {
                 // Create new
                 await addDoc(collection(db, 'clients'), {
                     ...clientData,
+                    companyId: currentUser.companyId,
                     status: 'Active',
                     projects: 0,
                     invoices: 0,
@@ -225,6 +231,7 @@ const ClientsDirectory = () => {
                 clientData.invoices = 0;
 
                 if (clientData.name) {
+                    clientData.companyId = currentUser.companyId;
                     batchPromises.push(addDoc(collection(db, 'clients'), clientData));
                     successCount++;
                 }

@@ -49,7 +49,9 @@ const Dashboard = () => {
             try {
                 // 1. Fetch Invoices (Revenue & Pending)
                 const invoicesRef = collection(db, 'invoices');
-                const invoicesSnapshot = await getDocs(invoicesRef);
+                // Filter by companyId
+                const invoicesQuery = query(invoicesRef, where('companyId', '==', currentUser.companyId));
+                const invoicesSnapshot = await getDocs(invoicesQuery);
 
                 let totalRevenue = 0;
                 let pendingCount = 0;
@@ -78,7 +80,9 @@ const Dashboard = () => {
 
                 // 2. Fetch Projects (Active)
                 const projectsRef = collection(db, 'projects');
-                const projectsSnapshot = await getDocs(projectsRef);
+                // Filter by companyId
+                const projectsQuery = query(projectsRef, where('companyId', '==', currentUser.companyId));
+                const projectsSnapshot = await getDocs(projectsQuery);
                 const projects = projectsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
                 // Count active projects
@@ -87,7 +91,9 @@ const Dashboard = () => {
                 // 3. Fetch Tasks (My Tasks & Completed KPI)
                 // Need to resolve Auth UID -> Employee ID via Email match
                 const employeesRef = collection(db, 'employees');
-                const employeesSnap = await getDocs(employeesRef);
+                // Filter by companyId
+                const employeesQuery = query(employeesRef, where('companyId', '==', currentUser.companyId));
+                const employeesSnap = await getDocs(employeesQuery);
                 const currentEmployee = employeesSnap.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
                     .find(emp => emp.email && emp.email.toLowerCase() === currentUser.email.toLowerCase());

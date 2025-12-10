@@ -40,6 +40,7 @@ import SalesAnalytics from './pages/analytics/SalesAnalytics';
 import FinanceAnalytics from './pages/analytics/FinanceAnalytics';
 // Settings Page
 import Settings from './pages/settings/Settings';
+import DataRecovery from './pages/admin/DataRecovery';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/auth/Login';
@@ -107,6 +108,9 @@ function App() {
           {/* Standalone Pages */}
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
           <Route path="/portal" element={<ClientPortal />} />
+
+          {/* Admin Routes */}
+          <Route path="/app/admin/recovery" element={<RequireAuth><DataRecovery /></RequireAuth>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, getDocs, doc, updateDoc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import ThreePaneLayout from '../components/layout/ThreePaneLayout';
 import KanbanBoard from '../components/ui/KanbanBoard';
@@ -10,7 +10,10 @@ import TaskDrawer from '../components/tasks/TaskDrawer';
 import Badge from '../components/ui/Badge';
 import Select from '../components/ui/Select';
 
+import { useAuth } from '../context/AuthContext';
+
 const Tasks = () => {
+    const { currentUser } = useAuth();
     const [view, setView] = useState('board'); // 'board' | 'list' | 'table'
     const [tasks, setTasks] = useState([]);
     const [projects, setProjects] = useState({});
@@ -29,14 +32,18 @@ const Tasks = () => {
 
     // Fetch Projects and Tasks
     useEffect(() => {
+        if (!currentUser?.companyId) return;
+
         const fetchAllData = async () => {
             setLoading(true);
             const logs = [];
             const addLog = (msg) => logs.push(msg);
 
             try {
-                // 1. Fetch Projects
-                const projectsSnapshot = await getDocs(collection(db, 'projects'));
+                // 1. Fetch Projects (Only for this company)
+                // Filter by companyId
+                const projectsQ = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                const projectsSnapshot = await getDocs(projectsQ);
                 addLog(`Projects fetched: ${projectsSnapshot.size}`);
                 const projectsMap = {};
                 projectsSnapshot.docs.forEach(doc => {
@@ -89,7 +96,7 @@ const Tasks = () => {
         };
 
         fetchAllData();
-    }, []);
+    }, [currentUser]);
 
     // Filtering Logic
     useEffect(() => {

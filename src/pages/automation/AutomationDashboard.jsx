@@ -4,28 +4,37 @@ import Layout from '../../components/layout/ThreePaneLayout';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/ui/Icon';
 import Badge from '../../components/ui/Badge';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 
 const AutomationDashboard = () => {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [automations, setAutomations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('All');
 
     useEffect(() => {
-        const q = query(collection(db, 'automations'), orderBy('createdAt', 'desc'));
+        if (!currentUser?.companyId) return;
+        const q = query(collection(db, 'automations'), where('companyId', '==', currentUser.companyId));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const automationData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            // Client-side sort
+            automationData.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA; // Descending
+            });
             setAutomations(automationData);
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [currentUser]);
 
     const filteredAutomations = filterStatus === 'All'
         ? automations

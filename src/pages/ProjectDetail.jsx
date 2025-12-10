@@ -12,12 +12,16 @@ import ProjectTasks from '../components/projects/tabs/ProjectTasks';
 // import ProjectFiles from '../components/projects/tabs/ProjectFiles';
 // import ProjectFinance from '../components/projects/tabs/ProjectFinance';
 // import ProjectSettings from '../components/projects/tabs/ProjectSettings';
+import { useAuth } from '../context/AuthContext';
+
 
 import TaskDrawer from '../components/tasks/TaskDrawer';
 import CreateProjectModal from '../components/projects/CreateProjectModal';
 
 const ProjectDetail = () => {
+    const { currentUser } = useAuth();
     const { id } = useParams();
+
     const [activeTab, setActiveTab] = useState('overview');
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -31,7 +35,14 @@ const ProjectDetail = () => {
         // Use onSnapshot for real-time updates
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                setProject({ id: docSnap.id, ...docSnap.data() });
+                const data = docSnap.data();
+                if (data.companyId !== currentUser?.companyId) {
+                    console.error("Unauthorized access to project");
+                    setProject(null);
+                } else {
+                    setProject({ id: docSnap.id, ...data });
+                }
+
             } else {
                 console.log("No such project!");
                 setProject(null);
@@ -43,7 +54,8 @@ const ProjectDetail = () => {
         });
 
         return () => unsubscribe();
-    }, [id]);
+    }, [id, currentUser]);
+
 
     if (loading) {
         return (

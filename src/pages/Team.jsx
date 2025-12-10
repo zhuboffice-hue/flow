@@ -8,10 +8,12 @@ import PeopleGrid from '../components/people/PeopleGrid';
 import PeopleTable from '../components/people/PeopleTable';
 import InviteMemberModal from '../components/people/InviteMemberModal';
 import MessageModal from '../components/messaging/MessageModal';
+import { useAuth } from '../context/AuthContext';
 
 import { useNavigate } from 'react-router-dom';
 
 const Team = () => {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [employees, setEmployees] = useState([]);
     const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
@@ -21,13 +23,14 @@ const Team = () => {
     const [filterDepartment, setFilterDepartment] = useState('All');
 
     useEffect(() => {
-        const q = collection(db, 'employees');
+        if (!currentUser?.companyId) return;
+        const q = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setEmployees(data);
         });
         return () => unsubscribe();
-    }, []);
+    }, [currentUser]);
 
     const filteredEmployees = filterDepartment === 'All'
         ? employees

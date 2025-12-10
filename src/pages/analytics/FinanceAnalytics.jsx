@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/ThreePaneLayout';
 import Icon from '../../components/ui/Icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 
 const KPICard = ({ title, value, change, trend, icon, color }) => (
@@ -29,6 +30,7 @@ const KPICard = ({ title, value, change, trend, icon, color }) => (
 );
 
 const FinanceAnalytics = () => {
+    const { currentUser } = useAuth();
     const { formatCurrency, convertAmount, getCurrencySymbol } = useCurrency();
     const [loading, setLoading] = useState(true);
     const [kpiData, setKpiData] = useState({
@@ -42,12 +44,18 @@ const FinanceAnalytics = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!currentUser?.companyId) return;
             try {
                 setLoading(true);
-                const invoicesSnap = await getDocs(collection(db, 'invoices'));
+
+                // Fetch Invoices
+                const qInvoices = query(collection(db, 'invoices'), where('companyId', '==', currentUser.companyId));
+                const invoicesSnap = await getDocs(qInvoices);
                 const invoices = invoicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                const expensesSnap = await getDocs(collection(db, 'expenses'));
+                // Fetch Expenses
+                const qExpenses = query(collection(db, 'expenses'), where('companyId', '==', currentUser.companyId));
+                const expensesSnap = await getDocs(qExpenses);
                 const expenses = expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // --- Calculate KPIs ---
@@ -127,7 +135,7 @@ const FinanceAnalytics = () => {
         };
 
         fetchData();
-    }, [convertAmount]);
+    }, [convertAmount, currentUser]);
 
     if (loading) {
         return (

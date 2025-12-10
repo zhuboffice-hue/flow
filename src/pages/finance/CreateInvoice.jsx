@@ -4,10 +4,12 @@ import ThreePaneLayout from '../../components/layout/ThreePaneLayout';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/ui/Icon';
 import Input from '../../components/ui/Input'; // Assuming we have this, or use standard input
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 
 const CreateInvoice = () => {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [clients, setClients] = useState([]);
     const [projects, setProjects] = useState([]);
@@ -26,22 +28,24 @@ const CreateInvoice = () => {
     });
 
     useEffect(() => {
-        // Fetch clients and projects (Mock or Real)
-        // For now, let's just use mock data or empty arrays if we haven't implemented those fetches yet
-        // Ideally we fetch from 'clients' and 'projects' collections
+        if (!currentUser?.companyId) return;
+
+        // Fetch clients and projects
         const fetchData = async () => {
             try {
-                const clientsSnapshot = await getDocs(collection(db, 'clients'));
+                const clientsQ = query(collection(db, 'clients'), where('companyId', '==', currentUser.companyId));
+                const clientsSnapshot = await getDocs(clientsQ);
                 setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-                const projectsSnapshot = await getDocs(collection(db, 'projects'));
+                const projectsQ = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                const projectsSnapshot = await getDocs(projectsQ);
                 setProjects(projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         };
         fetchData();
-    }, []);
+    }, [currentUser]);
 
     const handleLineItemChange = (index, field, value) => {
         const newLineItems = [...formData.lineItems];
@@ -83,6 +87,7 @@ const CreateInvoice = () => {
         try {
             const invoiceData = {
                 ...formData,
+                companyId: currentUser.companyId,
                 subtotal: calculateSubtotal(),
                 total: calculateTotal(),
                 createdAt: new Date(),

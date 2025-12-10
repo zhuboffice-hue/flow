@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { addDoc, collection, getDocs } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
@@ -8,6 +9,7 @@ import TextArea from '../ui/TextArea';
 import Button from '../ui/Button';
 
 const EventCreateModal = ({ isOpen, onClose, initialDates }) => {
+    const { currentUser } = useAuth();
     const [title, setTitle] = useState('');
     const [type, setType] = useState('meeting');
     const [start, setStart] = useState('');
@@ -45,7 +47,9 @@ const EventCreateModal = ({ isOpen, onClose, initialDates }) => {
 
     useEffect(() => {
         const fetchProjects = async () => {
-            const snapshot = await getDocs(collection(db, 'projects'));
+            if (!currentUser?.companyId) return;
+            const q = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+            const snapshot = await getDocs(q);
             setProjects(snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name })));
         };
         fetchProjects();
@@ -58,13 +62,13 @@ const EventCreateModal = ({ isOpen, onClose, initialDates }) => {
             await addDoc(collection(db, 'calendarEvents'), {
                 title,
                 type,
+                location,
                 start: new Date(start),
                 end: new Date(end),
                 projectId: projectId || null,
-                description,
-                location,
+                companyId: currentUser.companyId,
+                createdBy: currentUser.uid,
                 createdAt: new Date(),
-                createdBy: 'current-user-id' // Replace with actual user ID
             });
             onClose();
         } catch (error) {

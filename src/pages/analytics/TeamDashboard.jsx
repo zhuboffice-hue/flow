@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/ThreePaneLayout';
 import Icon from '../../components/ui/Icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 
 const KPICard = ({ title, value, change, trend, icon, color }) => (
     <div className="bg-surface p-6 rounded-lg border border-border">
@@ -28,6 +29,7 @@ const KPICard = ({ title, value, change, trend, icon, color }) => (
 );
 
 const TeamDashboard = () => {
+    const { currentUser } = useAuth();
     const [loading, setLoading] = useState(true);
     const [kpiData, setKpiData] = useState({
         onTimeDelivery: 0,
@@ -40,9 +42,11 @@ const TeamDashboard = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!currentUser?.companyId) return;
             try {
                 setLoading(true);
-                const projectsSnap = await getDocs(collection(db, 'projects'));
+                const qProjects = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                const projectsSnap = await getDocs(qProjects);
                 const projects = projectsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Fetch tasks from ALL projects (subcollections)
@@ -56,7 +60,8 @@ const TeamDashboard = () => {
                 }));
                 const tasks = allTasks; // Use 'tasks' variable for downstream compatibility
 
-                const employeesSnap = await getDocs(collection(db, 'employees'));
+                const qEmployees = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
+                const employeesSnap = await getDocs(qEmployees);
                 const employees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // --- Calculate KPIs ---
@@ -127,7 +132,7 @@ const TeamDashboard = () => {
         };
 
         fetchData();
-    }, []);
+    }, [currentUser]);
 
     // ... (rendering code)
 

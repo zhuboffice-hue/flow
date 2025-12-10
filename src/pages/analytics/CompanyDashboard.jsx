@@ -4,6 +4,7 @@ import Icon from '../../components/ui/Icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { exportToCSV } from '../../utils/export';
 import { useCurrency } from '../../hooks/useCurrency';
 
@@ -30,6 +31,7 @@ const KPICard = ({ title, value, change, trend, icon, color }) => (
 );
 
 const CompanyDashboard = () => {
+    const { currentUser } = useAuth();
     const { formatCurrency, convertAmount, getCurrencySymbol } = useCurrency();
     const [loading, setLoading] = useState(true);
     const [kpiData, setKpiData] = useState({
@@ -46,19 +48,23 @@ const CompanyDashboard = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!currentUser?.companyId) return;
             try {
                 setLoading(true);
 
                 // Fetch Invoices (Revenue)
-                const invoicesSnap = await getDocs(collection(db, 'invoices'));
+                const qInvoices = query(collection(db, 'invoices'), where('companyId', '==', currentUser.companyId));
+                const invoicesSnap = await getDocs(qInvoices);
                 const invoices = invoicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Fetch Expenses
-                const expensesSnap = await getDocs(collection(db, 'expenses'));
+                const qExpenses = query(collection(db, 'expenses'), where('companyId', '==', currentUser.companyId));
+                const expensesSnap = await getDocs(qExpenses);
                 const expenses = expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Fetch Projects
-                const projectsSnap = await getDocs(collection(db, 'projects'));
+                const qProjects = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                const projectsSnap = await getDocs(qProjects);
                 const projects = projectsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // --- Calculate KPIs ---
@@ -124,7 +130,7 @@ const CompanyDashboard = () => {
         };
 
         fetchData();
-    }, [convertAmount]);
+    }, [convertAmount, currentUser]);
 
     const handleExport = () => {
         // Export Chart Data (Revenue/Expenses)

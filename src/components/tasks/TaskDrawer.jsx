@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, updateDoc, doc, getDocs, getDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, getDocs, getDoc, arrayUnion, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { initialTaskState } from '../../lib/models';
@@ -39,10 +39,13 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
 
     // Fetch employees and project name
     useEffect(() => {
+        if (!isOpen || !currentUser?.companyId) return;
+
         const fetchData = async () => {
             try {
-                // Fetch Employees
-                const querySnapshot = await getDocs(collection(db, 'employees'));
+                // Fetch Employees (Filtered)
+                const employeesQ = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
+                const querySnapshot = await getDocs(employeesQ);
                 const employeeList = querySnapshot.docs.map(doc => ({
                     id: doc.id,
                     name: doc.data().name,
@@ -59,7 +62,9 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
                     }
                 } else {
                     // Fetch all projects for selection if no projectId passed (Quick Add mode)
-                    const projectsSnap = await getDocs(collection(db, 'projects'));
+                    // Filter by companyId
+                    const projectsQ = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                    const projectsSnap = await getDocs(projectsQ);
                     const projectList = projectsSnap.docs.map(d => ({ id: d.id, name: d.data().name }));
                     setProjects(projectList);
                 }
@@ -71,7 +76,7 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
         if (isOpen) {
             fetchData();
         }
-    }, [isOpen, projectId]);
+    }, [isOpen, projectId, currentUser]);
 
     const [projects, setProjects] = useState([]);
     const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');

@@ -2,26 +2,35 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/ThreePaneLayout';
 import Icon from '../../components/ui/Icon';
 import Badge from '../../components/ui/Badge';
-import { collection, query, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 
 const AutomationLogs = () => {
+    const { currentUser } = useAuth();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const q = query(collection(db, 'automationLogs'), orderBy('timestamp', 'desc'), limit(50));
+        if (!currentUser?.companyId) return;
+        const q = query(collection(db, 'automationLogs'), where('companyId', '==', currentUser.companyId));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const logData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            setLogs(logData);
+            // Client-side sort and limit
+            logData.sort((a, b) => {
+                const dateA = a.timestamp?.seconds || 0;
+                const dateB = b.timestamp?.seconds || 0;
+                return dateB - dateA; // Descending
+            });
+            setLogs(logData.slice(0, 50));
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [currentUser]);
 
     return (
         <Layout>

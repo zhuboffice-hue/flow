@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/ThreePaneLayout';
 import Icon from '../../components/ui/Icon';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 
 const KPICard = ({ title, value, change, trend, icon, color }) => (
@@ -29,6 +30,7 @@ const KPICard = ({ title, value, change, trend, icon, color }) => (
 );
 
 const ProjectDashboard = () => {
+    const { currentUser } = useAuth();
     const { formatCurrency, convertAmount } = useCurrency();
     const [loading, setLoading] = useState(true);
     const [kpiData, setKpiData] = useState({
@@ -45,15 +47,23 @@ const ProjectDashboard = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!currentUser?.companyId) return;
             try {
                 setLoading(true);
-                const projectsSnap = await getDocs(collection(db, 'projects'));
+
+                // Fetch Projects
+                const qProjects = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+                const projectsSnap = await getDocs(qProjects);
                 const projects = projectsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                const tasksSnap = await getDocs(collection(db, 'tasks'));
+                // Fetch Tasks
+                const qTasks = query(collection(db, 'tasks'), where('companyId', '==', currentUser.companyId));
+                const tasksSnap = await getDocs(qTasks);
                 const tasks = tasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                const expensesSnap = await getDocs(collection(db, 'expenses'));
+                // Fetch Expenses
+                const qExpenses = query(collection(db, 'expenses'), where('companyId', '==', currentUser.companyId));
+                const expensesSnap = await getDocs(qExpenses);
                 const expenses = expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // --- Calculate KPIs ---
@@ -104,7 +114,7 @@ const ProjectDashboard = () => {
         };
 
         fetchData();
-    }, [convertAmount]);
+    }, [convertAmount, currentUser]);
 
     if (loading) {
         return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, updateDoc, doc, getDocs, deleteDoc, where } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import ThreePaneLayout from '../components/layout/ThreePaneLayout';
@@ -10,8 +10,10 @@ import Badge from '../components/ui/Badge';
 import ProjectsStats from '../components/projects/ProjectsStats';
 import ProjectCard from '../components/projects/ProjectCard';
 import CreateProjectModal from '../components/projects/CreateProjectModal';
+import { useAuth } from '../context/AuthContext';
 
 const Projects = () => {
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [view, setView] = useState('grid'); // 'grid' | 'list'
     const [projects, setProjects] = useState([]);
@@ -21,10 +23,14 @@ const Projects = () => {
     const [clientsMap, setClientsMap] = useState({});
 
     useEffect(() => {
+        if (!currentUser?.companyId) return;
+
         const fetchProjectsAndClients = async () => {
             // 1. Fetch Clients Map
             try {
-                const clientsSnap = await getDocs(collection(db, 'clients'));
+                // Filter by companyId
+                const clientsQ = query(collection(db, 'clients'), where('companyId', '==', currentUser.companyId));
+                const clientsSnap = await getDocs(clientsQ);
                 const map = {};
                 clientsSnap.docs.forEach(c => map[c.id] = c.data().name);
                 setClientsMap(map);
@@ -39,9 +45,16 @@ const Projects = () => {
         };
         fetchProjectsAndClients();
 
-        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+        // Filter by companyId
+        const q = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
         const unsubscribe = onSnapshot(q, async (snapshot) => {
             const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sort
+            projectsData.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA; // Descending
+            });
 
             // Calculate Progress for each project
             const projectsWithProgress = await Promise.all(projectsData.map(async (project) => {
@@ -64,8 +77,9 @@ const Projects = () => {
             setProjects(projectsWithProgress);
             setLoading(false);
         });
+
         return () => unsubscribe();
-    }, []);
+    }, [currentUser]);
 
     const handleStatusChange = async (projectId, newStatus) => {
         try {

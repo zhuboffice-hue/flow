@@ -8,28 +8,37 @@ import ProposalTemplates from '../components/sales/ProposalTemplates';
 
 import CreateLeadModal from '../components/sales/CreateLeadModal';
 
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 const Sales = () => {
+    const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [leads, setLeads] = useState([]);
     const [employees, setEmployees] = useState([]);
 
     useEffect(() => {
+        if (!currentUser?.companyId) return;
         // Fetch Leads
-        const qLeads = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
+        const qLeads = query(collection(db, 'leads'), where('companyId', '==', currentUser.companyId));
         const unsubscribeLeads = onSnapshot(qLeads, (snapshot) => {
             const leadsData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            // Client-side sort
+            leadsData.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA; // Descending
+            });
             setLeads(leadsData);
         });
 
         // Fetch Employees
-        const qEmployees = collection(db, 'employees');
+        const qEmployees = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
         const unsubscribeEmployees = onSnapshot(qEmployees, (snapshot) => {
             const employeesData = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -42,7 +51,7 @@ const Sales = () => {
             unsubscribeLeads();
             unsubscribeEmployees();
         };
-    }, []);
+    }, [currentUser]);
 
     const createNotification = async (recipientId, recipientEmail, message) => {
         try {
@@ -64,6 +73,7 @@ const Sales = () => {
         try {
             const leadRef = await addDoc(collection(db, 'leads'), {
                 ...data,
+                companyId: currentUser.companyId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 stage: 'new', // Default stage

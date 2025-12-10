@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 import AddExpenseModal from './AddExpenseModal';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 
 const ExpensesList = () => {
+    const { currentUser } = useAuth();
     const { formatCurrency } = useCurrency();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [filterCategory, setFilterCategory] = useState('All');
@@ -15,18 +17,28 @@ const ExpensesList = () => {
     const [projects, setProjects] = useState({});
 
     useEffect(() => {
+        if (!currentUser?.companyId) return;
+
         // Fetch Expenses
-        const q = query(collection(db, 'expenses'), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, 'expenses'), where('companyId', '==', currentUser.companyId));
         const unsubscribeExpenses = onSnapshot(q, (snapshot) => {
             const expensesData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+            // Client-side sort
+            expensesData.sort((a, b) => {
+                const dateA = a.createdAt?.seconds || 0;
+                const dateB = b.createdAt?.seconds || 0;
+                return dateB - dateA; // Descending
+            });
             setExpenses(expensesData);
         });
 
         // Fetch Projects
-        const unsubscribeProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
+        // Fetch Projects
+        const qProjects = query(collection(db, 'projects'), where('companyId', '==', currentUser.companyId));
+        const unsubscribeProjects = onSnapshot(qProjects, (snapshot) => {
             const projectsMap = {};
             snapshot.docs.forEach(doc => {
                 projectsMap[doc.id] = doc.data().name;
@@ -38,7 +50,7 @@ const ExpensesList = () => {
             unsubscribeExpenses();
             unsubscribeProjects();
         };
-    }, []);
+    }, [currentUser]);
 
     const filteredExpenses = filterCategory === 'All'
         ? expenses
