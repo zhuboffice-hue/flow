@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signOut,
     onAuthStateChanged,
     updateProfile
@@ -52,43 +53,55 @@ export const AuthProvider = ({ children }) => {
     };
 
     const loginWithGoogle = async () => {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-
-        // Check if user document exists
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-            // New user via Google Auth
-            // Create a default company for them
-            const companyRef = doc(collection(db, 'companies'));
-            await setDoc(companyRef, {
-                name: `${user.displayName}'s Company`,
-                industry: 'Other',
-                size: '1-10',
-                plan: 'free',
-                createdAt: new Date(),
-                ownerId: user.uid
-            });
-
-            // Create User Document
-            await setDoc(userDocRef, {
-                name: user.displayName,
-                email: user.email,
-                role: 'Admin',
-                companyId: companyRef.id,
-                photoURL: user.photoURL,
-                createdAt: new Date()
-            });
-        }
-
-        return user;
+        await signInWithRedirect(auth, googleProvider);
     };
 
     const logout = () => {
         return signOut(auth);
     };
+
+    // Handle Google Redirect Result
+    useEffect(() => {
+        const handleRedirectResult = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result) {
+                    const user = result.user;
+                    // Check if user document exists
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (!userDoc.exists()) {
+                        // New user via Google Auth
+                        // Create a default company for them
+                        const companyRef = doc(collection(db, 'companies'));
+                        await setDoc(companyRef, {
+                            name: `${user.displayName}'s Company`,
+                            industry: 'Other',
+                            size: '1-10',
+                            plan: 'free',
+                            createdAt: new Date(),
+                            ownerId: user.uid
+                        });
+
+                        // Create User Document
+                        await setDoc(userDocRef, {
+                            name: user.displayName,
+                            email: user.email,
+                            role: 'Admin',
+                            companyId: companyRef.id,
+                            photoURL: user.photoURL,
+                            createdAt: new Date()
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Error handling redirect result:", error);
+            }
+        };
+
+        handleRedirectResult();
+    }, []);
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
