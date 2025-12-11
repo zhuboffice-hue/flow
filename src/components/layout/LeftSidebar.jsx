@@ -44,17 +44,13 @@ const navGroups = [
     }
 ];
 
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
+
 const LeftSidebar = ({ className, onCollapse }) => {
     const { currentUser, logout } = useAuth();
-    const [isDark, setIsDark] = React.useState(false);
+    const { isDark, toggleTheme } = useTheme(); // Use global theme context
 
-    React.useEffect(() => {
-        if (isDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }, [isDark]);
+    // Removed local state and useEffect
 
     const handleLogout = async () => {
         try {
@@ -65,7 +61,7 @@ const LeftSidebar = ({ className, onCollapse }) => {
     };
 
     return (
-        <aside className={cn("flex flex-col w-64 h-screen border-r border-border bg-background", className)}>
+        <aside className={cn("flex flex-col w-64 h-full border-r border-border bg-background transition-all", className)}>
             {/* Header */}
             <div className="flex items-center h-16 px-6 border-b border-border">
                 <div className="flex items-center gap-2">
@@ -132,7 +128,7 @@ const LeftSidebar = ({ className, onCollapse }) => {
             {/* Footer */}
             <div className="p-4 border-t border-border space-y-2">
                 {/* Theme Toggle */}
-                <div className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-surface transition-colors cursor-pointer" onClick={() => setIsDark(!isDark)}>
+                <div className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-surface transition-colors cursor-pointer" onClick={toggleTheme}>
                     <div className="flex items-center gap-2 text-text-secondary">
                         <Icon name={isDark ? "Moon" : "Sun"} size={16} />
                         <span className="text-small">{isDark ? 'Dark Mode' : 'Light Mode'}</span>

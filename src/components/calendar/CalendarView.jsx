@@ -49,17 +49,8 @@ const CalendarView = ({ events, view, onView, date, onNavigate, onSelectEvent, o
 
     const CustomEvent = ({ event }) => {
         return (
-            <div className="flex items-center justify-between h-full overflow-hidden">
-                <span className="truncate flex-1">{event.title}</span>
-                <button
-                    className="ml-1 bg-white/20 hover:bg-white/40 text-white rounded px-1 py-0.5 text-[10px] uppercase font-bold tracking-wider"
-                    onClick={(e) => {
-                        e.stopPropagation(); // Prevent parent click
-                        onSelectEvent(event);
-                    }}
-                >
-                    View
-                </button>
+            <div className="flex items-center h-full overflow-hidden px-1">
+                <span className="truncate font-medium text-xs text-white">{event.title}</span>
             </div>
         );
     };
@@ -83,6 +74,7 @@ const CalendarView = ({ events, view, onView, date, onNavigate, onSelectEvent, o
                 components={{
                     event: CustomEvent
                 }}
+                toolbar={false}
                 views={['month', 'week', 'day', 'agenda']}
             />
         </div>

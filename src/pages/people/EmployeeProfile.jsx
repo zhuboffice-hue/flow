@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import ThreePaneLayout from '../../components/layout/ThreePaneLayout';
 import Button from '../../components/ui/Button';
@@ -8,6 +8,7 @@ import Icon from '../../components/ui/Icon';
 import Avatar from '../../components/ui/Avatar';
 import Badge from '../../components/ui/Badge';
 import MessageModal from '../../components/messaging/MessageModal';
+import EmployeeFormModal from '../../components/people/EmployeeFormModal';
 
 const EmployeeProfile = () => {
     const { id } = useParams();
@@ -16,6 +17,7 @@ const EmployeeProfile = () => {
     const [activeTab, setActiveTab] = useState('Overview');
     const [loading, setLoading] = useState(true);
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchEmployee = async () => {
@@ -34,6 +36,45 @@ const EmployeeProfile = () => {
         };
         fetchEmployee();
     }, [id]);
+
+    const handleUpdateProfile = async (updatedData) => {
+        try {
+            const docRef = doc(db, 'employees', id);
+            // Only update specific fields to avoid overwriting metadata if any
+            await updateDoc(docRef, {
+                name: updatedData.name,
+                phone: updatedData.phone,
+                role: updatedData.role,
+                department: updatedData.department,
+                availability: updatedData.availability,
+                workload: updatedData.workload,
+                skills: updatedData.skills
+            });
+            setEmployee(prev => ({ ...prev, ...updatedData }));
+            // Optional: show toast
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            alert("Failed to update profile.");
+        }
+    };
+
+    const handleDeactivate = async () => {
+        if (!window.confirm("Are you sure you want to deactivate this employee? They will lose access to the system.")) return;
+
+        try {
+            const docRef = doc(db, 'employees', id);
+            await updateDoc(docRef, {
+                status: 'Inactive',
+                availability: 'Offline'
+            });
+            setEmployee(prev => ({ ...prev, status: 'Inactive', availability: 'Offline' }));
+            alert("Employee deactivated successfully.");
+            navigate('/app/team');
+        } catch (error) {
+            console.error("Error deactivating employee:", error);
+            alert("Failed to deactivate employee.");
+        }
+    };
 
     if (loading) return <ThreePaneLayout><div className="p-6">Loading...</div></ThreePaneLayout>;
     if (!employee) return <ThreePaneLayout><div className="p-6">Employee not found</div></ThreePaneLayout>;
@@ -55,8 +96,8 @@ const EmployeeProfile = () => {
                             >
                                 Message
                             </Button>
-                            <Button variant="secondary">Edit Profile</Button>
-                            <Button variant="danger">Deactivate</Button>
+                            <Button variant="secondary" onClick={() => setIsEditModalOpen(true)}>Edit Profile</Button>
+                            <Button variant="danger" onClick={handleDeactivate}>Deactivate</Button>
                         </div>
                     </div>
 
@@ -195,6 +236,13 @@ const EmployeeProfile = () => {
                 recipientId={employee?.uid}
                 recipientName={employee?.name}
                 recipientEmail={employee?.email}
+            />
+
+            <EmployeeFormModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSubmit={handleUpdateProfile}
+                initialData={employee}
             />
         </ThreePaneLayout>
     );

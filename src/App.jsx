@@ -43,6 +43,7 @@ import Settings from './pages/settings/Settings';
 import DataRecovery from './pages/admin/DataRecovery';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import AcceptInvite from './pages/auth/AcceptInvite';
@@ -58,64 +59,66 @@ const RequireAuth = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/legal" element={<Legal />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/invite/:code" element={<AcceptInvite />} />
-          </Route>
+      <ThemeProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/legal" element={<Legal />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/invite/:code" element={<AcceptInvite />} />
+            </Route>
 
-          {/* App Routes (Protected) */}
-          <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/app/clients" element={<RequireAuth><ClientsDirectory /></RequireAuth>} />
-          <Route path="/app/clients/:id" element={<RequireAuth><ClientDetail /></RequireAuth>} />
-          <Route path="/app/projects" element={<RequireAuth><Projects /></RequireAuth>} />
-          <Route path="/app/projects/:id" element={<RequireAuth><ProjectDetail /></RequireAuth>} />
-          <Route path="/app/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
-          <Route path="/app/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
-          <Route path="/app/files" element={<RequireAuth><Files /></RequireAuth>} />
-          <Route path="/app/team" element={<RequireAuth><Team /></RequireAuth>} />
-          <Route path="/app/team/:id" element={<RequireAuth><EmployeeProfile /></RequireAuth>} />
-          <Route path="/app/finance" element={<RequireAuth><Finance /></RequireAuth>} />
-          <Route path="/app/finance/invoices/new" element={<RequireAuth><CreateInvoice /></RequireAuth>} />
-          <Route path="/app/finance/invoices/:id" element={<RequireAuth><InvoiceView /></RequireAuth>} />
-          <Route path="/app/sales" element={<RequireAuth><Sales /></RequireAuth>} />
+            {/* App Routes (Protected) */}
+            <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/app/clients" element={<RequireAuth><ClientsDirectory /></RequireAuth>} />
+            <Route path="/app/clients/:id" element={<RequireAuth><ClientDetail /></RequireAuth>} />
+            <Route path="/app/projects" element={<RequireAuth><Projects /></RequireAuth>} />
+            <Route path="/app/projects/:id" element={<RequireAuth><ProjectDetail /></RequireAuth>} />
+            <Route path="/app/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
+            <Route path="/app/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
+            <Route path="/app/files" element={<RequireAuth><Files /></RequireAuth>} />
+            <Route path="/app/team" element={<RequireAuth><Team /></RequireAuth>} />
+            <Route path="/app/team/:id" element={<RequireAuth><EmployeeProfile /></RequireAuth>} />
+            <Route path="/app/finance" element={<RequireAuth><Finance /></RequireAuth>} />
+            <Route path="/app/finance/invoices/new" element={<RequireAuth><CreateInvoice /></RequireAuth>} />
+            <Route path="/app/finance/invoices/:id" element={<RequireAuth><InvoiceView /></RequireAuth>} />
+            <Route path="/app/sales" element={<RequireAuth><Sales /></RequireAuth>} />
 
-          {/* Automation Routes */}
-          <Route path="/app/automation" element={<RequireAuth><AutomationDashboard /></RequireAuth>} />
-          <Route path="/app/automation/create" element={<RequireAuth><AutomationBuilder /></RequireAuth>} />
-          <Route path="/app/automation/:id" element={<RequireAuth><AutomationBuilder /></RequireAuth>} />
-          <Route path="/app/automation/logs" element={<RequireAuth><AutomationLogs /></RequireAuth>} />
+            {/* Automation Routes */}
+            <Route path="/app/automation" element={<RequireAuth><AutomationDashboard /></RequireAuth>} />
+            <Route path="/app/automation/create" element={<RequireAuth><AutomationBuilder /></RequireAuth>} />
+            <Route path="/app/automation/:id" element={<RequireAuth><AutomationBuilder /></RequireAuth>} />
+            <Route path="/app/automation/logs" element={<RequireAuth><AutomationLogs /></RequireAuth>} />
 
-          {/* Analytics Routes */}
-          <Route path="/app/analytics" element={<RequireAuth><AnalyticsHome /></RequireAuth>} />
-          <Route path="/app/analytics/company" element={<RequireAuth><CompanyDashboard /></RequireAuth>} />
-          <Route path="/app/analytics/team" element={<RequireAuth><TeamDashboard /></RequireAuth>} />
-          <Route path="/app/analytics/projects" element={<RequireAuth><ProjectDashboard /></RequireAuth>} />
-          <Route path="/app/analytics/sales" element={<RequireAuth><SalesAnalytics /></RequireAuth>} />
-          <Route path="/app/analytics/finance" element={<RequireAuth><FinanceAnalytics /></RequireAuth>} />
-          <Route path="/app/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+            {/* Analytics Routes */}
+            <Route path="/app/analytics" element={<RequireAuth><AnalyticsHome /></RequireAuth>} />
+            <Route path="/app/analytics/company" element={<RequireAuth><CompanyDashboard /></RequireAuth>} />
+            <Route path="/app/analytics/team" element={<RequireAuth><TeamDashboard /></RequireAuth>} />
+            <Route path="/app/analytics/projects" element={<RequireAuth><ProjectDashboard /></RequireAuth>} />
+            <Route path="/app/analytics/sales" element={<RequireAuth><SalesAnalytics /></RequireAuth>} />
+            <Route path="/app/analytics/finance" element={<RequireAuth><FinanceAnalytics /></RequireAuth>} />
+            <Route path="/app/settings" element={<RequireAuth><Settings /></RequireAuth>} />
 
-          {/* Standalone Pages */}
-          <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-          <Route path="/portal" element={<ClientPortal />} />
+            {/* Standalone Pages */}
+            <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+            <Route path="/portal" element={<ClientPortal />} />
 
-          {/* Admin Routes */}
-          <Route path="/app/admin/recovery" element={<RequireAuth><DataRecovery /></RequireAuth>} />
+            {/* Admin Routes */}
+            <Route path="/app/admin/recovery" element={<RequireAuth><DataRecovery /></RequireAuth>} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

@@ -25,7 +25,7 @@ const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead,
 
     return (
         <div
-            className="flex-shrink-0 w-80 flex flex-col h-full bg-surface-secondary/50 rounded-lg border border-border"
+            className="w-full h-full flex flex-col bg-surface-secondary/50 rounded-lg border border-border"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
@@ -151,19 +151,20 @@ const PipelineBoard = ({ leads = [], employees = [] }) => {
             </div>
 
             {/* Board */}
-            <div className="flex-1 overflow-x-auto">
-                <div className="flex gap-4 h-full min-w-max pb-4">
+            <div className="flex-1 overflow-x-auto md:overflow-x-auto overflow-y-auto md:overflow-y-hidden">
+                <div className="flex flex-col md:flex-row gap-4 h-full md:min-w-max pb-4 px-4 md:px-0">
                     {stages.map(stage => (
-                        <PipelineColumn
-                            key={stage.id}
-                            stageId={stage.id}
-                            title={stage.title}
-                            count={stage.leads.length}
-                            leads={stage.leads}
-                            onLeadClick={setSelectedLead}
-                            onDropLead={handleDropLead}
-                            currentUser={currentUser}
-                        />
+                        <div key={stage.id} className="w-full md:w-80 flex-shrink-0 h-auto md:h-full">
+                            <PipelineColumn
+                                stageId={stage.id}
+                                title={stage.title}
+                                count={stage.leads.length}
+                                leads={stage.leads}
+                                onLeadClick={setSelectedLead}
+                                onDropLead={handleDropLead}
+                                currentUser={currentUser}
+                            />
+                        </div>
                     ))}
                 </div>
             </div>

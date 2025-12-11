@@ -115,6 +115,7 @@ const SalesDashboard = ({ leads = [] }) => {
     return (
         <div className="space-y-6">
             {/* KPI Row */}
+            {/* KPI Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                 <KPICard label="Total Leads" value={totalLeads} trend="up" trendValue="+12%" icon="Users" color="primary" />
                 <KPICard label="Qualified" value={qualifiedLeads} trend="up" trendValue="+5%" icon="CheckCircle" color="success" />

@@ -81,8 +81,35 @@ const ExpensesList = () => {
                 </div>
             </div>
 
+            {/* Mobile Card View */}
+            <div className="md:hidden grid grid-cols-1 gap-4 p-4">
+                {filteredExpenses.map(expense => (
+                    <div key={expense.id} className="p-4 bg-surface flex flex-col gap-3 rounded-lg border border-border">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <span className="px-2 py-0.5 rounded-full bg-surface-secondary text-[10px] border border-border mb-1 inline-block">
+                                    {expense.category}
+                                </span>
+                                <h4 className="font-bold text-text-primary text-sm truncate max-w-[100px]">{expense.vendor}</h4>
+                            </div>
+                        </div>
+
+                        <div className="font-bold text-text-primary text-base">
+                            {formatCurrency(expense.amount, expense.currency)}
+                        </div>
+
+                        <div className="text-xs text-text-secondary mt-auto pt-2 border-t border-border">
+                            {expense.date}
+                            {projects[expense.projectId] && (
+                                <div className="truncate mt-1 text-[10px] opacity-75">{projects[expense.projectId]}</div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-surface-secondary text-text-secondary font-medium border-b border-border">
                         <tr>

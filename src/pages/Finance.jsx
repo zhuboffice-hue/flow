@@ -121,35 +121,37 @@ const Finance = () => {
                             <p className="text-text-secondary">Manage invoices, expenses, and track financial health.</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Button variant="secondary" onClick={handleExportReport} disabled={exporting}>
+                            <Button variant="secondary" onClick={handleExportReport} disabled={exporting} className="whitespace-nowrap min-w-fit">
                                 <Icon name="Download" size={16} className="mr-2" />
                                 {exporting ? 'Exporting...' : 'Export Report'}
                             </Button>
-                            <Button onClick={() => navigate('/app/finance/invoices/new')}>
+                            <Button onClick={() => navigate('/app/finance/invoices/new')} className="whitespace-nowrap min-w-fit">
                                 <Icon name="Plus" size={16} className="mr-2" /> New Invoice
                             </Button>
                         </div>
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex gap-6">
-                        {[
-                            { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
-                            { id: 'invoices', label: 'Invoices', icon: 'FileText' },
-                            { id: 'expenses', label: 'Expenses', icon: 'Receipt' },
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 pb-3 border-b-2 transition-colors ${activeTab === tab.id
-                                    ? 'border-primary text-primary font-medium'
-                                    : 'border-transparent text-text-secondary hover:text-text-primary'
-                                    }`}
-                            >
-                                <Icon name={tab.icon} size={16} />
-                                {tab.label}
-                            </button>
-                        ))}
+                    <div className="overflow-x-auto scrollbar-hide">
+                        <div className="flex gap-6 whitespace-nowrap min-w-max">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
+                                { id: 'invoices', label: 'Invoices', icon: 'FileText' },
+                                { id: 'expenses', label: 'Expenses', icon: 'Receipt' },
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 pb-3 border-b-2 transition-colors ${activeTab === tab.id
+                                        ? 'border-primary text-primary font-medium'
+                                        : 'border-transparent text-text-secondary hover:text-text-primary'
+                                        }`}
+                                >
+                                    <Icon name={tab.icon} size={16} />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

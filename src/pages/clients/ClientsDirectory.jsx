@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import Icon from '../../components/ui/Icon';
 import Badge from '../../components/ui/Badge';
 import Avatar from '../../components/ui/Avatar';
+import Select from '../../components/ui/Select';
 import ClientFormModal from '../../components/clients/ClientFormModal';
 import { useAuth } from '../../context/AuthContext';
 
@@ -102,16 +103,16 @@ const ClientsDirectory = () => {
                 const variants = { 'Active': 'bg-success/10 text-success', 'Inactive': 'bg-danger/10 text-danger', 'On Hold': 'bg-warning/10 text-warning' };
                 const currentStatus = row?.status || 'Active';
                 return (
-                    <select
-                        className={`text-xs font-medium px-2 py-1 rounded-full border-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer ${variants[currentStatus] || 'bg-gray-100 text-gray-600'}`}
+                    <Select
+                        className="w-24 border-none shadow-none bg-transparent hover:bg-surface-secondary"
                         value={currentStatus}
-                        onClick={(e) => e.stopPropagation()}
+                        options={[
+                            { value: 'Active', label: 'Active' },
+                            { value: 'Inactive', label: 'Inactive' },
+                            { value: 'On Hold', label: 'On Hold' }
+                        ]}
                         onChange={(e) => handleStatusChange(row.id, e.target.value)}
-                    >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="On Hold">On Hold</option>
-                    </select>
+                    />
                 );
             }
         },
@@ -255,12 +256,12 @@ const ClientsDirectory = () => {
         <ThreePaneLayout>
             <div className="p-6 space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-h2 font-bold text-text-primary">Clients</h1>
                         <p className="text-text-secondary">Manage your client relationships.</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 w-full md:w-auto">
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -268,19 +269,19 @@ const ClientsDirectory = () => {
                             accept=".csv"
                             className="hidden"
                         />
-                        <Button variant="secondary" onClick={handleImportClick}>
+                        <Button variant="secondary" onClick={handleImportClick} className="justify-center w-full sm:w-auto whitespace-nowrap">
                             <Icon name="Upload" size={16} className="mr-2" /> Import CSV
                         </Button>
-                        <Button onClick={openNewClientModal}>
+                        <Button onClick={openNewClientModal} className="justify-center w-full sm:w-auto whitespace-nowrap">
                             <Icon name="Plus" size={16} className="mr-2" /> Add Client
                         </Button>
                     </div>
                 </div>
 
                 {/* Filters & Search */}
-                <div className="flex items-center justify-between gap-4 bg-surface p-4 rounded-lg border border-border">
-                    <div className="flex items-center gap-2 flex-1">
-                        <div className="relative flex-1 max-w-md">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-surface p-4 rounded-lg border border-border">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 flex-1">
+                        <div className="relative flex-1 max-w-full md:max-w-md">
                             <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                             <input
                                 type="text"
@@ -288,20 +289,32 @@ const ClientsDirectory = () => {
                                 className="w-full pl-10 pr-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                             />
                         </div>
-                        <div className="h-8 w-px bg-border mx-2"></div>
-                        <select defaultValue="All Statuses" className="px-3 py-2 rounded-md border border-border bg-background text-small">
-                            <option value="All Statuses">All Statuses</option>
-                            <option value="Active">Active</option>
-                            <option value="Paused">Paused</option>
-                            <option value="Archived">Archived</option>
-                        </select>
-                        <select defaultValue="All Industries" className="px-3 py-2 rounded-md border border-border bg-background text-small">
-                            <option value="All Industries">All Industries</option>
-                            <option value="Technology">Technology</option>
-                            <option value="Finance">Finance</option>
-                        </select>
+                        <div className="hidden md:block h-8 w-px bg-border mx-2"></div>
+                        <div className="grid grid-cols-2 md:flex gap-2 w-full md:w-auto">
+                            <div className="w-full md:w-[180px]">
+                                <Select
+                                    value="All Statuses"
+                                    options={[
+                                        { value: 'All Statuses', label: 'All Statuses' },
+                                        { value: 'Active', label: 'Active' },
+                                        { value: 'Paused', label: 'Paused' },
+                                        { value: 'Archived', label: 'Archived' }
+                                    ]}
+                                />
+                            </div>
+                            <div className="w-full md:w-[180px]">
+                                <Select
+                                    value="All Industries"
+                                    options={[
+                                        { value: 'All Industries', label: 'All Industries' },
+                                        { value: 'Technology', label: 'Technology' },
+                                        { value: 'Finance', label: 'Finance' }
+                                    ]}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex bg-background rounded-md border border-border p-1">
+                    <div className="flex bg-background rounded-md border border-border p-1 self-end md:self-auto">
                         <button
                             className={`p-1.5 rounded ${viewMode === 'table' ? 'bg-surface shadow-sm' : 'text-muted hover:text-text-primary'}`}
                             onClick={() => setViewMode('table')}
@@ -327,7 +340,7 @@ const ClientsDirectory = () => {
                         />
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {clients.map(client => (
                             <div key={client.id} className="bg-surface p-6 rounded-lg border border-border hover:shadow-md transition-shadow relative group">
                                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">

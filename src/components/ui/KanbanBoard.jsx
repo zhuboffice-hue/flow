@@ -56,7 +56,21 @@ const KanbanColumn = ({ id, title, count, children, onAdd, onMenu, onDropTask })
     );
 };
 
-const KanbanCard = ({ id, title, tags, assignee, dueDate, priority, projectName, onClick }) => {
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
+
+const KanbanCard = ({ id, title, tags, assignee, assigneeId, dueDate, priority, projectName, onClick }) => {
+    const { currentUser } = useAuth();
+
+    // Allow drag if:
+    // 1. Task is unassigned (so it can be picked up)
+    // 2. OR Current user is the assignee
+    // 3. OR Current user is an Admin (optional but good practice, though strictly "assigned person" requested, I'll stick to assignee + unassigned default)
+
+    // Strict interpretation: "only the assigned person".
+    // I will interpret this as: You cannot move SOMEONE ELSE'S task.
+    // If it's yours or nobody's, you can move it.
+    const isDraggable = !assigneeId || (currentUser?.uid === assigneeId);
+
     const priorityColors = {
         High: "text-danger bg-danger/10",
         Medium: "text-warning bg-warning/10",
@@ -64,16 +78,24 @@ const KanbanCard = ({ id, title, tags, assignee, dueDate, priority, projectName,
     };
 
     const handleDragStart = (e) => {
+        if (!isDraggable) {
+            e.preventDefault();
+            return;
+        }
         e.dataTransfer.setData('taskId', id);
         e.dataTransfer.effectAllowed = 'move';
     };
 
     return (
         <div
-            draggable="true"
+            draggable={isDraggable}
             onDragStart={handleDragStart}
-            className="p-3 bg-surface rounded-md border border-border shadow-sm hover:shadow-md transition-shadow cursor-pointer group active:cursor-grabbing"
+            className={cn(
+                "p-3 bg-surface rounded-md border border-border shadow-sm hover:shadow-md transition-shadow group relative",
+                isDraggable ? "cursor-move active:cursor-grabbing" : "cursor-not-allowed opacity-80"
+            )}
             onClick={onClick}
+            title={!isDraggable ? "Only the assignee can move this task" : ""}
         >
             {/* Project Name Badge */}
             {projectName && (

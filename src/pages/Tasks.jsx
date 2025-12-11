@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Tasks = () => {
     const { currentUser } = useAuth();
-    const [view, setView] = useState('board'); // 'board' | 'list' | 'table'
+    const [view, setView] = useState('kanban'); // 'kanban' | 'list' | 'table'
     const [tasks, setTasks] = useState([]);
     const [projects, setProjects] = useState({});
     const [filteredTasks, setFilteredTasks] = useState([]);
@@ -186,7 +186,7 @@ const Tasks = () => {
     ];
 
     const listColumns = [
-        { key: 'select', header: '', cell: () => <input type="checkbox" className="rounded border-gray-300" /> },
+        // Removed checkbox until bulk actions are implemented
         { key: 'title', header: 'Task Name', accessor: 'title', cell: (_, row) => <span className="font-medium text-text-primary cursor-pointer hover:underline" onClick={() => handleEditTask(row)}>{row.title}</span> },
         { key: 'project', header: 'Project', accessor: 'projectName', cell: (_, row) => <span className="text-xs text-text-secondary bg-gray-100 px-2 py-1 rounded">{row.projectName}</span> },
         {
@@ -214,7 +214,26 @@ const Tasks = () => {
             }
         },
         { key: 'dueDate', header: 'Due Date', accessor: 'dueDate', cell: (_, row) => row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '-' },
-        { key: 'actions', header: '', cell: () => <Button variant="ghost" size="icon"><Icon name="MoreHorizontal" size={16} /></Button> }
+        {
+            key: 'actions',
+            header: 'Actions',
+            cell: (_, row) => (
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => handleEditTask(row)} title="Edit">
+                        <Icon name="Pencil" size={14} className="text-text-secondary hover:text-primary" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this task?')) {
+                            deleteDoc(doc(db, 'projects', row.projectId, 'tasks', row.id)).then(() => {
+                                setTasks(prev => prev.filter(t => t.id !== row.id));
+                            });
+                        }
+                    }} title="Delete">
+                        <Icon name="Trash2" size={14} className="text-text-secondary hover:text-danger" />
+                    </Button>
+                </div>
+            )
+        }
     ];
 
     const tableColumns = [
@@ -223,10 +242,28 @@ const Tasks = () => {
         { key: 'assignee', header: 'Assignee', accessor: 'assigneeId', cell: (_, row) => row.assigneeId ? row.assigneeName : '-' },
         { key: 'status', header: 'Status', accessor: 'status' },
         { key: 'priority', header: 'Priority', accessor: 'priority' },
-        { key: 'estimate', header: 'Est. (h)', accessor: 'estimateHours' },
-        { key: 'actual', header: 'Act. (h)', accessor: 'actualHours' },
+        // Removed Estimate and Actual hours as requested
         { key: 'dueDate', header: 'Due', accessor: 'dueDate', cell: (_, row) => row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '-' },
-        { key: 'actions', header: '', cell: () => <Button variant="ghost" size="icon"><Icon name="MoreHorizontal" size={16} /></Button> }
+        {
+            key: 'actions',
+            header: 'Actions',
+            cell: (_, row) => (
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => handleEditTask(row)} title="Edit">
+                        <Icon name="Pencil" size={14} className="text-text-secondary hover:text-primary" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this task?')) {
+                            deleteDoc(doc(db, 'projects', row.projectId, 'tasks', row.id)).then(() => {
+                                setTasks(prev => prev.filter(t => t.id !== row.id));
+                            });
+                        }
+                    }} title="Delete">
+                        <Icon name="Trash2" size={14} className="text-text-secondary hover:text-danger" />
+                    </Button>
+                </div>
+            )
+        }
     ];
 
     return (
@@ -234,16 +271,16 @@ const Tasks = () => {
             <div className="flex flex-col h-full">
                 {/* Header Actions & Filters */}
                 <div className="mb-6 space-y-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <h2 className="text-h3 font-bold text-text-primary">Global Tasks</h2>
                         <div className="flex items-center gap-2">
                             <Button variant="secondary" size="sm">Bulk Actions</Button>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 flex-1">
-                            <div className="relative flex-1 max-w-xs">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 flex-1">
+                            <div className="relative flex-1 md:max-w-xs">
                                 <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                                 <input
                                     type="text"
@@ -253,31 +290,33 @@ const Tasks = () => {
                                     className="w-full pl-9 pr-3 py-1.5 text-sm bg-surface border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                             </div>
-                            <select
-                                className="bg-surface border border-border rounded-md text-sm px-3 py-1.5 focus:outline-none"
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                            >
-                                <option value="All">All Status</option>
-                                <option value="To Do">To Do</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Review">Review</option>
-                                <option value="Done">Done</option>
-                            </select>
-                            <select
-                                className="bg-surface border border-border rounded-md text-sm px-3 py-1.5 focus:outline-none"
-                                value={priorityFilter}
-                                onChange={(e) => setPriorityFilter(e.target.value)}
-                            >
-                                <option value="All">All Priority</option>
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                                <option value="Urgent">Urgent</option>
-                            </select>
+                            <div className="flex gap-2">
+                                <select
+                                    className="flex-1 md:flex-none bg-surface border border-border rounded-md text-sm px-3 py-1.5 focus:outline-none"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    <option value="All">All Status</option>
+                                    <option value="To Do">To Do</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Review">Review</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                                <select
+                                    className="flex-1 md:flex-none bg-surface border border-border rounded-md text-sm px-3 py-1.5 focus:outline-none"
+                                    value={priorityFilter}
+                                    onChange={(e) => setPriorityFilter(e.target.value)}
+                                >
+                                    <option value="All">All Priority</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Urgent">Urgent</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div className="flex bg-surface rounded-md border border-border p-1">
+                        <div className="flex bg-surface rounded-md border border-border p-1 self-start md:self-auto">
                             <button
                                 onClick={() => setView('kanban')}
                                 className={`p-1.5 rounded ${view === 'kanban' ? 'bg-gray-100 text-text-primary' : 'text-muted hover:text-text-primary'}`}

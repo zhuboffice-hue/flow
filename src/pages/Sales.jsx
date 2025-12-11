@@ -102,18 +102,18 @@ const Sales = () => {
         <ThreePaneLayout>
             <div className="flex flex-col h-full bg-background">
                 {/* Header */}
-                <div className="bg-surface border-b border-border p-6 flex justify-between items-center">
+                <div className="bg-surface border-b border-border p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h1 className="text-h2 font-bold text-text-primary">Sales & CRM</h1>
-                    <div className="flex gap-3">
-                        <Button onClick={() => setIsCreateModalOpen(true)}>
+                    <div className="flex gap-3 w-full md:w-auto">
+                        <Button onClick={() => setIsCreateModalOpen(true)} className="w-full md:w-auto justify-center whitespace-nowrap">
                             <Icon name="Plus" size={16} className="mr-2" /> New Lead
                         </Button>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-surface border-b border-border px-6">
-                    <div className="flex gap-6">
+                <div className="bg-surface border-b border-border px-4 md:px-6 overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-6 whitespace-nowrap">
                         {['dashboard', 'pipeline', 'proposals'].map((tab) => (
                             <button
                                 key={tab}

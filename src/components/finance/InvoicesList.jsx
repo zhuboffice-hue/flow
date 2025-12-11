@@ -154,8 +154,43 @@ const InvoicesList = () => {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="md:hidden grid grid-cols-1 gap-4 p-4">
+                {filteredInvoices.map(invoice => (
+                    <div key={invoice.id} className="p-4 bg-surface hover:bg-background transition-colors flex flex-col gap-3 rounded-lg border border-border">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h4 className="font-bold text-text-primary text-sm">{invoice.invoiceNumber}</h4>
+                                <span className="text-xs text-text-secondary block mt-0.5 truncate max-w-[100px]">{clients[invoice.clientId] || 'Unknown Client'}</span>
+                            </div>
+                            <Badge variant={
+                                invoice.status === 'Paid' ? 'success' :
+                                    invoice.status === 'Overdue' ? 'danger' :
+                                        invoice.status === 'Unpaid' ? 'warning' : 'secondary'
+                            } className="text-[10px] px-1.5 py-0.5">
+                                {invoice.status}
+                            </Badge>
+                        </div>
+
+                        <div className="font-bold text-text-primary text-base">${invoice.total?.toFixed(2)}</div>
+
+                        <div className="flex justify-between items-center text-xs text-text-secondary mt-auto pt-2 border-t border-border">
+                            <span>{invoice.dueDate}</span>
+                            <div className="flex gap-1">
+                                <button onClick={() => navigate(`/app/finance/invoices/${invoice.id}`)} className="p-1.5 bg-surface-secondary rounded hover:text-primary">
+                                    <Icon name="Eye" size={14} />
+                                </button>
+                                <button onClick={() => handleDownload(invoice)} className="p-1.5 bg-surface-secondary rounded hover:text-primary">
+                                    <Icon name="Download" size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-surface-secondary text-text-secondary font-medium border-b border-border">
                         <tr>

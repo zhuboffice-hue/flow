@@ -176,31 +176,42 @@ const Projects = () => {
             }
         >
             <div className="p-6 max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
                     <div>
                         <h1 className="text-h2 font-bold text-text-primary">Projects</h1>
                         <p className="text-text-secondary">Manage and track all your projects</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex bg-surface rounded-md border border-border p-1">
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="flex bg-surface rounded-md border border-border p-1 flex-1 md:flex-none justify-center">
                             <button
                                 onClick={() => setView('list')}
-                                className={`p-1.5 rounded ${view === 'list' ? 'bg-gray-100 text-text-primary' : 'text-muted hover:text-text-primary'}`}
+                                className={`p-1.5 rounded flex-1 md:flex-none flex justify-center ${view === 'list' ? 'bg-gray-100 text-text-primary' : 'text-muted hover:text-text-primary'}`}
                                 title="List View"
                             >
                                 <Icon name="List" size={18} />
                             </button>
                             <button
                                 onClick={() => setView('grid')}
-                                className={`p-1.5 rounded ${view === 'grid' ? 'bg-gray-100 text-text-primary' : 'text-muted hover:text-text-primary'}`}
+                                className={`p-1.5 rounded flex-1 md:flex-none flex justify-center ${view === 'grid' ? 'bg-gray-100 text-text-primary' : 'text-muted hover:text-text-primary'}`}
                                 title="Grid View"
                             >
                                 <Icon name="LayoutGrid" size={18} />
                             </button>
                         </div>
-                        <Button icon="Plus" onClick={() => setIsCreateModalOpen(true)}>New Project</Button>
+                        {/* Desktop Button */}
+                        <div className="hidden md:block">
+                            <Button icon="Plus" onClick={() => setIsCreateModalOpen(true)}>New Project</Button>
+                        </div>
                     </div>
                 </div>
+
+                {/* Mobile Floating Action Button */}
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-primary-dark transition-colors"
+                >
+                    <Icon name="Plus" size={24} />
+                </button>
 
                 <ProjectsStats projects={projects} />
 

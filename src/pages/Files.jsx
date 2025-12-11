@@ -26,6 +26,7 @@ const Files = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [newFolderName, setNewFolderName] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar state
 
     // DnD State
     const [isDragging, setIsDragging] = useState(false);
@@ -188,37 +189,76 @@ const Files = () => {
 
     return (
         <ThreePaneLayout>
-            <div className="flex h-full">
-                <FileSidebar
-                    currentFolder={currentFolder}
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    folders={allFolders}
-                    onFolderSelect={(folder) => {
-                        setActiveCategory(null);
-                        handleFolderClick(folder);
-                    }}
-                    onCategorySelect={(cat) => { setActiveCategory(cat); setCurrentFolder(null); setFolderPath([{ id: null, name: 'Root' }]); }}
-                />
+            <div className="flex h-full relative">
+                {/* Mobile Drawer Overlay */}
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
 
-                <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Sidebar - Responsive Drawer */}
+                <div className={`
+                    fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border 
+                    transform transition-transform duration-200 ease-in-out
+                    md:relative md:translate-x-0 md:z-0
+                    ${isSidebarOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}
+                `}>
+                    <FileSidebar
+                        currentFolder={currentFolder}
+                        categories={categories}
+                        activeCategory={activeCategory}
+                        folders={allFolders}
+                        onFolderSelect={(folder) => {
+                            setActiveCategory(null);
+                            handleFolderClick(folder);
+                            setIsSidebarOpen(false); // Close on selection (mobile)
+                        }}
+                        onCategorySelect={(cat) => {
+                            setActiveCategory(cat);
+                            setCurrentFolder(null);
+                            setFolderPath([{ id: null, name: 'Root' }]);
+                            setIsSidebarOpen(false);
+                        }}
+                    />
+                    {/* Close button for mobile */}
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="absolute top-4 right-4 md:hidden text-text-secondary"
+                    >
+                        <Icon name="X" size={20} />
+                    </button>
+                </div>
+
+                <div className="flex-1 flex flex-col overflow-hidden w-full">
                     {/* Header / Toolbar */}
-                    <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-background">
-                        <div className="flex items-center gap-2 text-sm text-text-secondary">
-                            {folderPath.map((crumb, index) => (
-                                <React.Fragment key={index}>
-                                    <span
-                                        className="hover:text-primary cursor-pointer hover:underline font-medium"
-                                        onClick={() => handleBreadcrumbClick(index)}
-                                    >
-                                        {crumb.name}
-                                    </span>
-                                    {index < folderPath.length - 1 && <Icon name="ChevronRight" size={14} />}
-                                </React.Fragment>
-                            ))}
+                    <div className="h-16 border-b border-border flex items-center justify-between px-4 md:px-6 bg-background">
+                        <div className="flex items-center gap-2 text-sm text-text-secondary overflow-hidden">
+                            {/* Mobile Sidebar Toggle */}
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="mr-2 md:hidden text-text-secondary hover:text-text-primary"
+                            >
+                                <Icon name="Menu" size={20} />
+                            </button>
+
+                            <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                                {folderPath.map((crumb, index) => (
+                                    <React.Fragment key={index}>
+                                        <span
+                                            className="hover:text-primary cursor-pointer hover:underline font-medium"
+                                            onClick={() => handleBreadcrumbClick(index)}
+                                        >
+                                            {crumb.name}
+                                        </span>
+                                        {index < folderPath.length - 1 && <Icon name="ChevronRight" size={14} />}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex bg-surface rounded-md border border-border p-0.5">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <div className="flex bg-surface rounded-md border border-border p-0.5 hidden sm:flex">
                                 <button
                                     className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:text-text-primary'}`}
                                     onClick={() => setViewMode('grid')}
@@ -232,11 +272,13 @@ const Files = () => {
                                     <Icon name="List" size={18} />
                                 </button>
                             </div>
-                            <Button variant="secondary" onClick={() => setIsNewFolderModalOpen(true)}>
-                                <Icon name="FolderPlus" size={16} className="mr-2" /> New Folder
+                            <Button variant="secondary" size="sm" onClick={() => setIsNewFolderModalOpen(true)} className="whitespace-nowrap">
+                                <Icon name="FolderPlus" size={16} className="mr-0 md:mr-2" />
+                                <span className="hidden md:inline">New Folder</span>
                             </Button>
-                            <Button onClick={() => setIsUploadModalOpen(true)}>
-                                <Icon name="Upload" size={16} className="mr-2" /> Upload
+                            <Button size="sm" onClick={() => setIsUploadModalOpen(true)} className="whitespace-nowrap">
+                                <Icon name="Upload" size={16} className="mr-0 md:mr-2" />
+                                <span className="hidden md:inline">Upload</span>
                             </Button>
                         </div>
                     </div>

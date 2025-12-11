@@ -180,23 +180,23 @@ const Dashboard = () => {
 
     return (
         <ThreePaneLayout>
-            <div className="mb-8 flex justify-between items-end">
+            <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                     <h1 className="text-h1 font-bold text-text-primary">Dashboard</h1>
-                    <p className="text-text-secondary">Welcome back, {currentUser?.displayName || 'User'}. Here's what's happening today.</p>
+                    <p className="text-text-secondary mt-1">Welcome back, {currentUser?.displayName || 'User'}. Here's what's happening today.</p>
                 </div>
-                <div className="flex gap-3">
-                    <button onClick={() => navigate('/app/projects')} className="bg-surface border border-border text-text-primary px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+                    <button onClick={() => navigate('/app/projects')} className="bg-surface border border-border text-text-primary px-4 py-3 md:py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex-1 md:flex-none justify-center">
                         View Projects
                     </button>
-                    <button onClick={() => navigate('/app/finance/invoices/new')} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors shadow-sm">
+                    <button onClick={() => navigate('/app/finance/invoices/new')} className="bg-primary text-white px-4 py-3 md:py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors shadow-sm flex-1 md:flex-none justify-center">
                         + New Invoice
                     </button>
                 </div>
             </div>
 
             {/* KPI Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 <KPICard
                     title="Total Revenue"
                     value={formatCurrency(stats.revenue)}
@@ -225,9 +225,9 @@ const Dashboard = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 {/* Revenue Chart */}
-                <div className="lg:col-span-2 bg-surface rounded-lg border border-border p-6 shadow-sm">
+                <div className="lg:col-span-2 bg-surface rounded-lg border border-border p-4 md:p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-h3 font-semibold text-text-primary">Revenue Overview</h3>
                         <select className="bg-background border border-border rounded-md text-sm px-2 py-1 outline-none focus:border-primary">

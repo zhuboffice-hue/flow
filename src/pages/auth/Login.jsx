@@ -10,8 +10,15 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, loginWithGoogle } = useAuth();
+    const { login, loginWithGoogle, currentUser } = useAuth();
     const navigate = useNavigate();
+
+    // Redirect if already logged in
+    React.useEffect(() => {
+        if (currentUser) {
+            navigate('/app');
+        }
+    }, [currentUser, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,10 +26,9 @@ const Login = () => {
             setError('');
             setLoading(true);
             await login(email, password);
-            navigate('/app');
+            // Navigation handled by useEffect
         } catch (err) {
             setError('Failed to log in: ' + err.message);
-        } finally {
             setLoading(false);
         }
     };
@@ -80,18 +86,18 @@ const Login = () => {
 
 const GoogleLoginButton = ({ onError }) => {
     const { loginWithGoogle } = useAuth();
-    const navigate = useNavigate();
+    // Navigation handled by parent useEffect on currentUser change
+    // const navigate = useNavigate(); 
     const [loading, setLoading] = useState(false);
 
     const handleGoogleLogin = async () => {
         try {
             setLoading(true);
             await loginWithGoogle();
-            navigate('/app');
+            // No manual navigate here
         } catch (error) {
             console.error("Google Login Error:", error);
             onError("Failed to sign in with Google. Please try again.");
-        } finally {
             setLoading(false);
         }
     };

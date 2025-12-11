@@ -5,6 +5,7 @@ import ProfileSettings from './ProfileSettings';
 import CompanySettings from './CompanySettings';
 import TeamSettings from './TeamSettings';
 import BillingSettings from './BillingSettings';
+import NotificationSettings from './NotificationSettings';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('profile');

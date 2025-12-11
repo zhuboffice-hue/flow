@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { addMonths, addWeeks, addDays, subMonths, subWeeks, subDays, format } from 'date-fns';
 import ThreePaneLayout from '../components/layout/ThreePaneLayout';
 import CalendarView from '../components/calendar/CalendarView';
 import EventCreateModal from '../components/calendar/EventCreateModal';
@@ -22,6 +23,23 @@ const Calendar = () => {
         projects: [],
         assignees: []
     });
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768) {
+                setView('day');
+            }
+        };
+
+        // Initial check
+        if (window.innerWidth < 768) {
+            setView('day');
+        }
+
+        // Optional: Listen for resize if we want dynamic switching (users might not want this if they manually switched)
+        // window.addEventListener('resize', handleResize);
+        // return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Fetch Calendar Events
     useEffect(() => {
@@ -108,22 +126,66 @@ const Calendar = () => {
         setIsCreateModalOpen(true);
     };
 
+    const handleNavigate = (action) => {
+        let newDate = new Date(date);
+        if (action === 'TODAY') {
+            newDate = new Date();
+        } else if (action === 'PREV') {
+            if (view === 'month') newDate = subMonths(date, 1);
+            else if (view === 'week') newDate = subWeeks(date, 1);
+            else if (view === 'day') newDate = subDays(date, 1);
+            else if (view === 'agenda') newDate = subMonths(date, 1);
+        } else if (action === 'NEXT') {
+            if (view === 'month') newDate = addMonths(date, 1);
+            else if (view === 'week') newDate = addWeeks(date, 1);
+            else if (view === 'day') newDate = addDays(date, 1);
+            else if (view === 'agenda') newDate = addMonths(date, 1);
+        }
+        setDate(newDate);
+    };
+
     return (
         <ThreePaneLayout>
             <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-h3 font-bold text-text-primary">Calendar</h2>
-                        <div className="flex items-center bg-surface border border-border rounded-md p-1">
-                            <button onClick={() => setView('month')} className={`px-3 py-1 text-sm rounded ${view === 'month' ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:text-text-primary'}`}>Month</button>
-                            <button onClick={() => setView('week')} className={`px-3 py-1 text-sm rounded ${view === 'week' ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:text-text-primary'}`}>Week</button>
-                            <button onClick={() => setView('day')} className={`px-3 py-1 text-sm rounded ${view === 'day' ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:text-text-primary'}`}>Day</button>
-                            <button onClick={() => setView('agenda')} className={`px-3 py-1 text-sm rounded ${view === 'agenda' ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:text-text-primary'}`}>Agenda</button>
+                {/* Header */}
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+                        <h2 className="text-h3 font-bold text-text-primary whitespace-nowrap">Calendar</h2>
+
+                        <div className="flex items-center gap-2 bg-surface border border-border rounded-md p-1 shadow-sm">
+                            <button onClick={() => handleNavigate('PREV')} className="p-1.5 hover:bg-surface-secondary rounded-md text-text-secondary hover:text-text-primary">
+                                <Icon name="ChevronLeft" size={18} />
+                            </button>
+                            <button onClick={() => handleNavigate('TODAY')} className="px-3 py-1.5 text-sm font-medium hover:bg-surface-secondary rounded-md text-text-secondary hover:text-text-primary">
+                                Today
+                            </button>
+                            <button onClick={() => handleNavigate('NEXT')} className="p-1.5 hover:bg-surface-secondary rounded-md text-text-secondary hover:text-text-primary">
+                                <Icon name="ChevronRight" size={18} />
+                            </button>
                         </div>
+
+                        <span className="text-xl font-semibold text-text-primary min-w-[160px] text-center hidden sm:block">
+                            {format(date, 'MMMM yyyy')}
+                        </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button onClick={() => { setSelectedEvent(null); setIsCreateModalOpen(true); }}>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                        <div className="flex items-center bg-surface border border-border rounded-md p-1 w-full sm:w-auto shadow-sm">
+                            {['month', 'week', 'day', 'agenda'].map((v) => (
+                                <button
+                                    key={v}
+                                    onClick={() => setView(v)}
+                                    className={`px-3 py-1.5 text-sm font-medium rounded-md capitalize flex-1 sm:flex-none transition-colors ${view === v
+                                        ? 'bg-primary/10 text-primary shadow-sm'
+                                        : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary'
+                                        }`}
+                                >
+                                    {v}
+                                </button>
+                            ))}
+                        </div>
+                        <Button onClick={() => { setSelectedEvent(null); setIsCreateModalOpen(true); }} className="w-full sm:w-auto justify-center whitespace-nowrap">
                             <Icon name="Plus" size={16} className="mr-2" /> Add Event
                         </Button>
                     </div>

@@ -62,12 +62,12 @@ const ProposalTemplates = () => {
         <div className="h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-text-primary">Proposal Templates</h2>
-                <Button onClick={() => setIsCreateModalOpen(true)}>
+                <Button onClick={() => setIsCreateModalOpen(true)} className="whitespace-nowrap">
                     <Icon name="Plus" size={16} className="mr-2" /> New Template
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map((template) => (
                     <div
                         key={template.id}

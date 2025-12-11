@@ -96,20 +96,20 @@ const Topbar = ({ className, showMenuTrigger, onMenuClick }) => {
     ];
 
     return (
-        <header className={cn("flex items-center justify-between h-16 px-6 border-b border-border bg-surface", className)}>
+        <header className={cn("flex items-center justify-between h-16 px-4 md:px-6 border-b border-border bg-surface", className)}>
             <div className="flex-1 max-w-xl flex items-center gap-4">
                 {showMenuTrigger && (
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onMenuClick}
-                        className="text-text-secondary hover:text-text-primary"
+                        className="text-text-secondary hover:text-text-primary md:hidden"
                     >
                         <Icon name="Menu" size={20} />
                     </Button>
                 )}
-                {/* Search */}
-                <div className="relative flex-1">
+                {/* Search - Hide on mobile for now to save space, or make it expandable */}
+                <div className="relative flex-1 hidden md:block">
                     <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={18} />
                     <input
                         type="text"
@@ -120,7 +120,7 @@ const Topbar = ({ className, showMenuTrigger, onMenuClick }) => {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-4 ml-4">
+            <div className="flex items-center gap-2 md:gap-4 ml-2 md:ml-4">
                 <div className="relative">
                     <Button
                         variant="ghost"
@@ -163,13 +163,14 @@ const Topbar = ({ className, showMenuTrigger, onMenuClick }) => {
                     )}
                 </div>
 
-                <div className="h-6 w-px bg-border"></div>
+                <div className="h-6 w-px bg-border hidden md:block"></div>
 
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden md:block">
                         <p className="text-small font-medium text-text-primary">{currentUser?.name || 'User'}</p>
                         <p className="text-xs text-text-secondary">{currentUser?.role || 'Member'}</p>
                     </div>
+                    {/* User Avatar - clickable for mobile profile maybe? */}
                     <Avatar src={currentUser?.photoURL} fallback={getInitials(currentUser?.name)} size="md" />
                 </div>
 
@@ -179,8 +180,18 @@ const Topbar = ({ className, showMenuTrigger, onMenuClick }) => {
                         size="sm"
                         icon="Plus"
                         onClick={() => setShowQuickAdd(!showQuickAdd)}
+                        className="hidden md:flex"
                     >
                         Quick Add
+                    </Button>
+                    {/* Mobile Plus Icon only */}
+                    <Button
+                        variant="primary"
+                        size="icon"
+                        onClick={() => setShowQuickAdd(!showQuickAdd)}
+                        className="md:hidden w-8 h-8 md:w-auto md:h-auto"
+                    >
+                        <Icon name="Plus" size={18} />
                     </Button>
 
                     {showQuickAdd && (
