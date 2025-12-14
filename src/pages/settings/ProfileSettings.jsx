@@ -45,7 +45,13 @@ const ProfileSettings = () => {
         }
     }, [currentUser]);
 
-    // ... (handleChange)
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
     const handlePhotoUpload = async (e) => {
         const file = e.target.files[0];
