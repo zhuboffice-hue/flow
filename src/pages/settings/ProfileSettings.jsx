@@ -103,6 +103,18 @@ const ProfileSettings = () => {
         }
     };
 
+    const handlePasswordReset = async () => {
+        if (!currentUser?.email) return;
+        try {
+            await sendPasswordResetEmail(auth, currentUser.email);
+            setSuccess('Password reset email sent! Check your inbox.');
+            setTimeout(() => setSuccess(''), 5000);
+        } catch (error) {
+            console.error("Error sending password reset email:", error);
+            setError("Failed to send password reset email.");
+        }
+    };
+
     const handleEnable2FA = async () => {
         if (step === 'phone') {
             if (!phoneNumber) {
