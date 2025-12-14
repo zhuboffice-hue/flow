@@ -47,18 +47,25 @@ const ProfileSettings = () => {
 
     // ... (handleChange)
 
-    const handlePromoteToSuperAdmin = async () => {
-        if (!currentUser) return;
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
         try {
+            const photoURL = await uploadToCloudinary(file);
+            await updateProfile(currentUser, { photoURL });
+
             const userRef = doc(db, 'users', currentUser.uid);
-            await updateDoc(userRef, { role: 'SuperAdmin' });
-            setSuccess('Promoted to Super Admin! Please refresh.');
-            // Update local state to reflect immediately
-            setFormData(prev => ({ ...prev, role: 'SuperAdmin' }));
-            setTimeout(() => window.location.reload(), 1500);
+            await updateDoc(userRef, { photoURL });
+
+            setSuccess('Profile photo updated!');
+            setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
-            console.error("Error promoting:", error);
-            setError("Failed to promote.");
+            console.error("Error uploading photo:", error);
+            setError("Failed to upload photo.");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -254,15 +261,6 @@ const ProfileSettings = () => {
                                 disabled
                                 className="w-full px-3 py-2 bg-gray-50 border border-border rounded-md text-text-muted cursor-not-allowed"
                             />
-                            {formData.role !== 'SuperAdmin' && (
-                                <button
-                                    type="button"
-                                    onClick={handlePromoteToSuperAdmin}
-                                    className="px-3 py-2 bg-indigo-600 text-white rounded-md text-xs hover:bg-indigo-700 whitespace-nowrap"
-                                >
-                                    Make Super Admin
-                                </button>
-                            )}
                         </div>
                     </div>
                     <div className="col-span-full space-y-2">
@@ -311,64 +309,66 @@ const ProfileSettings = () => {
             </div>
 
             {/* 2FA Modal */}
-            {is2FAModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-surface rounded-lg p-6 w-full max-w-md">
-                        <h3 className="text-lg font-bold text-text-primary mb-4">Set up Two-Factor Authentication</h3>
-                        <p className="text-text-secondary text-sm mb-6">
-                            {step === 'phone'
-                                ? "Enter your phone number to receive a verification code."
-                                : `Enter the 6-digit code sent to ${phoneNumber}. (Use 123456)`}
-                        </p>
+            {
+                is2FAModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-surface rounded-lg p-6 w-full max-w-md">
+                            <h3 className="text-lg font-bold text-text-primary mb-4">Set up Two-Factor Authentication</h3>
+                            <p className="text-text-secondary text-sm mb-6">
+                                {step === 'phone'
+                                    ? "Enter your phone number to receive a verification code."
+                                    : `Enter the 6-digit code sent to ${phoneNumber}. (Use 123456)`}
+                            </p>
 
-                        <div className="space-y-4">
-                            {step === 'phone' ? (
-                                <div>
-                                    <label className="text-sm font-medium text-text-secondary block mb-1">Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        placeholder="+1 (555) 000-0000"
-                                        className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                                    />
-                                </div>
-                            ) : (
-                                <div>
-                                    <label className="text-sm font-medium text-text-secondary block mb-1">Verification Code</label>
-                                    <input
-                                        type="text"
-                                        value={verificationCode}
-                                        onChange={(e) => setVerificationCode(e.target.value)}
-                                        placeholder="123456"
-                                        className="w-full px-3 py-2 bg-background border border-border rounded-md tracking-widest text-center text-lg"
-                                    />
-                                </div>
-                            )}
+                            <div className="space-y-4">
+                                {step === 'phone' ? (
+                                    <div>
+                                        <label className="text-sm font-medium text-text-secondary block mb-1">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={phoneNumber}
+                                            onChange={(e) => setPhoneNumber(e.target.value)}
+                                            placeholder="+1 (555) 000-0000"
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-md"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <label className="text-sm font-medium text-text-secondary block mb-1">Verification Code</label>
+                                        <input
+                                            type="text"
+                                            value={verificationCode}
+                                            onChange={(e) => setVerificationCode(e.target.value)}
+                                            placeholder="123456"
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-md tracking-widest text-center text-lg"
+                                        />
+                                    </div>
+                                )}
 
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button
-                                    onClick={() => {
-                                        setIs2FAModalOpen(false);
-                                        setStep('phone');
-                                        setVerificationCode('');
-                                    }}
-                                    className="px-4 py-2 text-text-secondary hover:text-text-primary"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleEnable2FA}
-                                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark"
-                                >
-                                    {step === 'phone' ? 'Send Code' : 'Verify & Enable'}
-                                </button>
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <button
+                                        onClick={() => {
+                                            setIs2FAModalOpen(false);
+                                            setStep('phone');
+                                            setVerificationCode('');
+                                        }}
+                                        className="px-4 py-2 text-text-secondary hover:text-text-primary"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleEnable2FA}
+                                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+                                    >
+                                        {step === 'phone' ? 'Send Code' : 'Verify & Enable'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
