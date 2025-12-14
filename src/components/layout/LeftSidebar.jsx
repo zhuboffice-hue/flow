@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import Icon from '../ui/Icon';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const LeftSidebar = ({ className, onCollapse }) => {
     const { currentUser, logout } = useAuth();
