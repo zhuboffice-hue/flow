@@ -4,54 +4,50 @@ import { cn } from '../../lib/utils';
 import Icon from '../ui/Icon';
 import { useAuth } from '../../context/AuthContext';
 
-const navGroups = [
-    {
-        title: null, // "Main" group - no header needed
-        items: [
-            { name: 'Dashboard', icon: 'LayoutDashboard', path: '/app', module: null }, // Always available
-            { name: 'Calendar', icon: 'Calendar', path: '/app/calendar', module: null }, // Always available
-        ]
-    },
-    {
-        title: 'Workspace',
-        items: [
-            { name: 'Projects', icon: 'Folder', path: '/app/projects', module: 'projects' },
-            { name: 'Tasks', icon: 'CheckSquare', path: '/app/tasks', module: 'tasks' },
-            { name: 'Files', icon: 'FileText', path: '/app/files', module: 'files' },
-        ]
-    },
-    {
-        title: 'CRM & Sales',
-        items: [
-            { name: 'Clients', icon: 'Users', path: '/app/clients', module: 'clients' },
-            { name: 'Sales', icon: 'TrendingUp', path: '/app/sales', module: 'sales' },
-        ]
-    },
-    {
-        title: 'Business',
-        items: [
-            { name: 'Finance', icon: 'CreditCard', path: '/app/finance', module: 'finance' },
-            { name: 'People', icon: 'User', path: '/app/team', module: 'team' },
-            { name: 'Departments', icon: 'Briefcase', path: '/app/departments', module: 'departments' },
-        ]
-    },
-    {
-        title: 'System',
-        items: [
-            { name: 'Automation', icon: 'Zap', path: '/app/automation', module: 'automation' },
-            { name: 'Analytics', icon: 'BarChart2', path: '/app/analytics', module: 'analytics' },
-            { name: 'Settings', icon: 'Settings', path: '/app/settings', module: 'settings' },
-        ]
-    }
-];
-
-import { useTheme } from '../../context/ThemeContext'; // Import useTheme
-
 const LeftSidebar = ({ className, onCollapse }) => {
     const { currentUser, logout } = useAuth();
     const { isDark, toggleTheme } = useTheme(); // Use global theme context
 
-    // Removed local state and useEffect
+    const navGroups = [
+        {
+            title: null, // "Main" group - no header needed
+            items: [
+                { name: 'Dashboard', icon: 'LayoutDashboard', path: currentUser?.role === 'SuperAdmin' ? '/app/super-admin' : '/app', module: null }, // Redirects based on role
+                { name: 'Calendar', icon: 'Calendar', path: '/app/calendar', module: null }, // Always available
+            ]
+        },
+        {
+            title: 'Workspace',
+            items: [
+                { name: 'Projects', icon: 'Folder', path: '/app/projects', module: 'projects' },
+                { name: 'Tasks', icon: 'CheckSquare', path: '/app/tasks', module: 'tasks' },
+                { name: 'Files', icon: 'FileText', path: '/app/files', module: 'files' },
+            ]
+        },
+        {
+            title: 'CRM & Sales',
+            items: [
+                { name: 'Clients', icon: 'Users', path: '/app/clients', module: 'clients' },
+                { name: 'Sales', icon: 'TrendingUp', path: '/app/sales', module: 'sales' },
+            ]
+        },
+        {
+            title: 'Business',
+            items: [
+                { name: 'Finance', icon: 'CreditCard', path: '/app/finance', module: 'finance' },
+                { name: 'People', icon: 'User', path: '/app/team', module: 'team' },
+                { name: 'Departments', icon: 'Briefcase', path: '/app/departments', module: 'departments' },
+            ]
+        },
+        {
+            title: 'System',
+            items: [
+                { name: 'Automation', icon: 'Zap', path: '/app/automation', module: 'automation' },
+                { name: 'Analytics', icon: 'BarChart2', path: '/app/analytics', module: 'analytics' },
+                { name: 'Settings', icon: 'Settings', path: '/app/settings', module: 'settings' },
+            ]
+        }
+    ];
 
     const handleLogout = async () => {
         try {

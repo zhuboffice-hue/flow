@@ -59,6 +59,15 @@ const RequireAuth = ({ children }) => {
   return currentUser ? children : <Navigate to="/login" replace />;
 };
 
+const DashboardRedirect = () => {
+  const { currentUser } = useAuth();
+  console.log("DashboardRedirect: Checking user role", currentUser?.role);
+  if (currentUser?.role === 'SuperAdmin') {
+    return <Navigate to="/app/super-admin" replace />;
+  }
+  return <Dashboard />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -80,7 +89,7 @@ function App() {
             </Route>
 
             {/* App Routes (Protected) */}
-            <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/app" element={<RequireAuth><DashboardRedirect /></RequireAuth>} />
             <Route path="/app/clients" element={<RequireAuth><RequireModule module="clients"><ClientsDirectory /></RequireModule></RequireAuth>} />
             <Route path="/app/clients/:id" element={<RequireAuth><RequireModule module="clients"><ClientDetail /></RequireModule></RequireAuth>} />
             <Route path="/app/projects" element={<RequireAuth><RequireModule module="projects"><Projects /></RequireModule></RequireAuth>} />
