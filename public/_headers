@@ -1,7 +1,8 @@
-/
-  Cross-Origin-Opener-Policy: unsafe-none
-  Cross-Origin-Embedder-Policy: unsafe-none
-
 /*
-  Cross-Origin-Opener-Policy: unsafe-none
+  This file is used to configure Cloudflare Pages headers.
+  We need to set Cross-Origin-Opener-Policy to allow popups (like Google Login)
+  to communicate with the opener window.
+*/
+/*
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
   Cross-Origin-Embedder-Policy: unsafe-none

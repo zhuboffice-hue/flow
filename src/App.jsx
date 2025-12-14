@@ -20,6 +20,7 @@ import Tasks from './pages/Tasks';
 import Calendar from './pages/Calendar';
 import Files from './pages/Files';
 import Team from './pages/Team';
+import Departments from './pages/Departments';
 import EmployeeProfile from './pages/people/EmployeeProfile';
 import ClientPortal from './pages/ClientPortal';
 import ClientsDirectory from './pages/clients/ClientsDirectory';
@@ -41,12 +42,14 @@ import FinanceAnalytics from './pages/analytics/FinanceAnalytics';
 // Settings Page
 import Settings from './pages/settings/Settings';
 import DataRecovery from './pages/admin/DataRecovery';
+import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import AcceptInvite from './pages/auth/AcceptInvite';
+import RequireModule from './components/auth/RequireModule';
 
 const RequireAuth = ({ children }) => {
   const { currentUser } = useAuth();
@@ -78,34 +81,35 @@ function App() {
 
             {/* App Routes (Protected) */}
             <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/app/clients" element={<RequireAuth><ClientsDirectory /></RequireAuth>} />
-            <Route path="/app/clients/:id" element={<RequireAuth><ClientDetail /></RequireAuth>} />
-            <Route path="/app/projects" element={<RequireAuth><Projects /></RequireAuth>} />
-            <Route path="/app/projects/:id" element={<RequireAuth><ProjectDetail /></RequireAuth>} />
-            <Route path="/app/tasks" element={<RequireAuth><Tasks /></RequireAuth>} />
+            <Route path="/app/clients" element={<RequireAuth><RequireModule module="clients"><ClientsDirectory /></RequireModule></RequireAuth>} />
+            <Route path="/app/clients/:id" element={<RequireAuth><RequireModule module="clients"><ClientDetail /></RequireModule></RequireAuth>} />
+            <Route path="/app/projects" element={<RequireAuth><RequireModule module="projects"><Projects /></RequireModule></RequireAuth>} />
+            <Route path="/app/projects/:id" element={<RequireAuth><RequireModule module="projects"><ProjectDetail /></RequireModule></RequireAuth>} />
+            <Route path="/app/tasks" element={<RequireAuth><RequireModule module="tasks"><Tasks /></RequireModule></RequireAuth>} />
             <Route path="/app/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
-            <Route path="/app/files" element={<RequireAuth><Files /></RequireAuth>} />
-            <Route path="/app/team" element={<RequireAuth><Team /></RequireAuth>} />
-            <Route path="/app/team/:id" element={<RequireAuth><EmployeeProfile /></RequireAuth>} />
-            <Route path="/app/finance" element={<RequireAuth><Finance /></RequireAuth>} />
-            <Route path="/app/finance/invoices/new" element={<RequireAuth><CreateInvoice /></RequireAuth>} />
-            <Route path="/app/finance/invoices/:id" element={<RequireAuth><InvoiceView /></RequireAuth>} />
-            <Route path="/app/sales" element={<RequireAuth><Sales /></RequireAuth>} />
+            <Route path="/app/files" element={<RequireAuth><RequireModule module="files"><Files /></RequireModule></RequireAuth>} />
+            <Route path="/app/team" element={<RequireAuth><RequireModule module="team"><Team /></RequireModule></RequireAuth>} />
+            <Route path="/app/departments" element={<RequireAuth><RequireModule module="departments"><Departments /></RequireModule></RequireAuth>} />
+            <Route path="/app/team/:id" element={<RequireAuth><RequireModule module="team"><EmployeeProfile /></RequireModule></RequireAuth>} />
+            <Route path="/app/finance" element={<RequireAuth><RequireModule module="finance"><Finance /></RequireModule></RequireAuth>} />
+            <Route path="/app/finance/invoices/new" element={<RequireAuth><RequireModule module="finance"><CreateInvoice /></RequireModule></RequireAuth>} />
+            <Route path="/app/finance/invoices/:id" element={<RequireAuth><RequireModule module="finance"><InvoiceView /></RequireModule></RequireAuth>} />
+            <Route path="/app/sales" element={<RequireAuth><RequireModule module="sales"><Sales /></RequireModule></RequireAuth>} />
 
             {/* Automation Routes */}
-            <Route path="/app/automation" element={<RequireAuth><AutomationDashboard /></RequireAuth>} />
-            <Route path="/app/automation/create" element={<RequireAuth><AutomationBuilder /></RequireAuth>} />
-            <Route path="/app/automation/:id" element={<RequireAuth><AutomationBuilder /></RequireAuth>} />
-            <Route path="/app/automation/logs" element={<RequireAuth><AutomationLogs /></RequireAuth>} />
+            <Route path="/app/automation" element={<RequireAuth><RequireModule module="automation"><AutomationDashboard /></RequireModule></RequireAuth>} />
+            <Route path="/app/automation/create" element={<RequireAuth><RequireModule module="automation"><AutomationBuilder /></RequireModule></RequireAuth>} />
+            <Route path="/app/automation/:id" element={<RequireAuth><RequireModule module="automation"><AutomationBuilder /></RequireModule></RequireAuth>} />
+            <Route path="/app/automation/logs" element={<RequireAuth><RequireModule module="automation"><AutomationLogs /></RequireModule></RequireAuth>} />
 
             {/* Analytics Routes */}
-            <Route path="/app/analytics" element={<RequireAuth><AnalyticsHome /></RequireAuth>} />
-            <Route path="/app/analytics/company" element={<RequireAuth><CompanyDashboard /></RequireAuth>} />
-            <Route path="/app/analytics/team" element={<RequireAuth><TeamDashboard /></RequireAuth>} />
-            <Route path="/app/analytics/projects" element={<RequireAuth><ProjectDashboard /></RequireAuth>} />
-            <Route path="/app/analytics/sales" element={<RequireAuth><SalesAnalytics /></RequireAuth>} />
-            <Route path="/app/analytics/finance" element={<RequireAuth><FinanceAnalytics /></RequireAuth>} />
-            <Route path="/app/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+            <Route path="/app/analytics" element={<RequireAuth><RequireModule module="analytics"><AnalyticsHome /></RequireModule></RequireAuth>} />
+            <Route path="/app/analytics/company" element={<RequireAuth><RequireModule module="analytics"><CompanyDashboard /></RequireModule></RequireAuth>} />
+            <Route path="/app/analytics/team" element={<RequireAuth><RequireModule module="analytics"><TeamDashboard /></RequireModule></RequireAuth>} />
+            <Route path="/app/analytics/projects" element={<RequireAuth><RequireModule module="analytics"><ProjectDashboard /></RequireModule></RequireAuth>} />
+            <Route path="/app/analytics/sales" element={<RequireAuth><RequireModule module="analytics"><SalesAnalytics /></RequireModule></RequireAuth>} />
+            <Route path="/app/analytics/finance" element={<RequireAuth><RequireModule module="analytics"><FinanceAnalytics /></RequireModule></RequireAuth>} />
+            <Route path="/app/settings" element={<RequireAuth><RequireModule module="settings"><Settings /></RequireModule></RequireAuth>} />
 
             {/* Standalone Pages */}
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
@@ -113,6 +117,7 @@ function App() {
 
             {/* Admin Routes */}
             <Route path="/app/admin/recovery" element={<RequireAuth><DataRecovery /></RequireAuth>} />
+            <Route path="/app/super-admin" element={<RequireAuth><SuperAdminDashboard /></RequireAuth>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

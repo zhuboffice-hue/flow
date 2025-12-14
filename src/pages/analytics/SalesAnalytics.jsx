@@ -161,7 +161,7 @@ const SalesAnalytics = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-surface p-6 rounded-lg border border-border">
                         <h3 className="text-lg font-bold text-text-primary mb-6">Pipeline Performance</h3>
-                        <div className="h-80">
+                        <div className="h-80 w-full" style={{ width: '99%', minWidth: 1 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={pipelineData} layout="vertical">
                                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />
@@ -176,7 +176,7 @@ const SalesAnalytics = () => {
 
                     <div className="bg-surface p-6 rounded-lg border border-border">
                         <h3 className="text-lg font-bold text-text-primary mb-6">Lead Sources</h3>
-                        <div className="h-80">
+                        <div className="h-80 w-full" style={{ width: '99%', minWidth: 1 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie

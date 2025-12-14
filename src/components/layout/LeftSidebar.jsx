@@ -8,38 +8,39 @@ const navGroups = [
     {
         title: null, // "Main" group - no header needed
         items: [
-            { name: 'Dashboard', icon: 'LayoutDashboard', path: '/app' },
-            { name: 'Calendar', icon: 'Calendar', path: '/app/calendar' },
+            { name: 'Dashboard', icon: 'LayoutDashboard', path: '/app', module: null }, // Always available
+            { name: 'Calendar', icon: 'Calendar', path: '/app/calendar', module: null }, // Always available
         ]
     },
     {
         title: 'Workspace',
         items: [
-            { name: 'Projects', icon: 'Folder', path: '/app/projects' },
-            { name: 'Tasks', icon: 'CheckSquare', path: '/app/tasks' },
-            { name: 'Files', icon: 'FileText', path: '/app/files' },
+            { name: 'Projects', icon: 'Folder', path: '/app/projects', module: 'projects' },
+            { name: 'Tasks', icon: 'CheckSquare', path: '/app/tasks', module: 'tasks' },
+            { name: 'Files', icon: 'FileText', path: '/app/files', module: 'files' },
         ]
     },
     {
         title: 'CRM & Sales',
         items: [
-            { name: 'Clients', icon: 'Users', path: '/app/clients' },
-            { name: 'Sales', icon: 'TrendingUp', path: '/app/sales' },
+            { name: 'Clients', icon: 'Users', path: '/app/clients', module: 'clients' },
+            { name: 'Sales', icon: 'TrendingUp', path: '/app/sales', module: 'sales' },
         ]
     },
     {
         title: 'Business',
         items: [
-            { name: 'Finance', icon: 'CreditCard', path: '/app/finance' },
-            { name: 'People', icon: 'User', path: '/app/team' },
+            { name: 'Finance', icon: 'CreditCard', path: '/app/finance', module: 'finance' },
+            { name: 'People', icon: 'User', path: '/app/team', module: 'team' },
+            { name: 'Departments', icon: 'Briefcase', path: '/app/departments', module: 'departments' },
         ]
     },
     {
         title: 'System',
         items: [
-            { name: 'Automation', icon: 'Zap', path: '/app/automation' },
-            { name: 'Analytics', icon: 'BarChart2', path: '/app/analytics' },
-            { name: 'Settings', icon: 'Settings', path: '/app/settings' },
+            { name: 'Automation', icon: 'Zap', path: '/app/automation', module: 'automation' },
+            { name: 'Analytics', icon: 'BarChart2', path: '/app/analytics', module: 'analytics' },
+            { name: 'Settings', icon: 'Settings', path: '/app/settings', module: 'settings' },
         ]
     }
 ];
@@ -94,35 +95,46 @@ const LeftSidebar = ({ className, onCollapse }) => {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-6">
-                {navGroups.map((group, groupIndex) => (
-                    <div key={groupIndex}>
-                        {group.title && (
-                            <h4 className="px-3 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                {group.title}
-                            </h4>
-                        )}
-                        <div className="space-y-0.5">
-                            {group.items.map((item) => (
-                                <NavLink
-                                    key={item.name}
-                                    to={item.path}
-                                    end={item.path === '/app'}
-                                    className={({ isActive }) =>
-                                        cn(
-                                            "flex items-center gap-3 px-3 py-2 rounded-md text-small font-medium transition-colors",
-                                            isActive
-                                                ? "bg-primary text-white"
-                                                : "text-text-secondary hover:bg-surface hover:text-text-primary"
-                                        )
-                                    }
-                                >
-                                    <Icon name={item.icon} size={18} />
-                                    {item.name}
-                                </NavLink>
-                            ))}
+                {navGroups.map((group, groupIndex) => {
+                    const visibleItems = group.items.filter(item => {
+                        if (!item.module) return true; // Always show public items
+                        if (currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') return true; // Admin sees all
+                        if (!currentUser?.allowedModules) return true; // Default to visible for migration safety
+                        return currentUser.allowedModules.includes(item.module);
+                    });
+
+                    if (visibleItems.length === 0) return null;
+
+                    return (
+                        <div key={groupIndex}>
+                            {group.title && (
+                                <h4 className="px-3 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                                    {group.title}
+                                </h4>
+                            )}
+                            <div className="space-y-0.5">
+                                {visibleItems.map((item) => (
+                                    <NavLink
+                                        key={item.name}
+                                        to={item.path}
+                                        end={item.path === '/app'}
+                                        className={({ isActive }) =>
+                                            cn(
+                                                "flex items-center gap-3 px-3 py-2 rounded-md text-small font-medium transition-colors",
+                                                isActive
+                                                    ? "bg-primary text-white"
+                                                    : "text-text-secondary hover:bg-surface hover:text-text-primary"
+                                            )
+                                        }
+                                    >
+                                        <Icon name={item.icon} size={18} />
+                                        {item.name}
+                                    </NavLink>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </nav>
 
             {/* Footer */}

@@ -3,6 +3,7 @@ import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
+import { APP_MODULES } from '../../lib/modules';
 
 const EmployeeFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     const defaultData = {
@@ -13,7 +14,8 @@ const EmployeeFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) =>
         phone: '',
         availability: 'Available',
         workload: 0,
-        skills: []
+        skills: [],
+        allowedModules: [] // Default: no access (or we could default to all)
     };
 
     // Helper to parse skills (assuming array of objects) to string for input
@@ -37,7 +39,25 @@ const EmployeeFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) =>
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const newData = { ...prev, [name]: value };
+            // If role becomes Admin, they get all modules
+            if (name === 'role' && value === 'Admin') {
+                newData.allowedModules = APP_MODULES.map(m => m.id);
+            }
+            return newData;
+        });
+    };
+
+    const handleModuleToggle = (moduleId) => {
+        setFormData(prev => {
+            const current = prev.allowedModules || [];
+            if (current.includes(moduleId)) {
+                return { ...prev, allowedModules: current.filter(id => id !== moduleId) };
+            } else {
+                return { ...prev, allowedModules: [...current, moduleId] };
+            }
+        });
     };
 
     const handleSubmit = (e) => {
@@ -160,6 +180,32 @@ const EmployeeFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) =>
                     onChange={(e) => setSkillsString(e.target.value)}
                     placeholder="React, Node.js, UI Design..."
                 />
+
+                <div className="space-y-2 pt-2 border-t border-border">
+                    <label className="block text-sm font-medium text-text-primary">Access Permissions</label>
+                    <p className="text-xs text-text-secondary mb-2">Select which screens this user can access.</p>
+
+                    {formData.role === 'Admin' ? (
+                        <div className="p-3 bg-blue-50 text-blue-700 rounded-md text-sm border border-blue-100">
+                            Admins have full access to all modules.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-border rounded-md bg-surface-secondary/20">
+                            {APP_MODULES.map(module => (
+                                <label key={module.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-surface rounded">
+                                    <input
+                                        type="checkbox"
+                                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                                        checked={(formData.allowedModules || []).includes(module.id)}
+                                        onChange={() => handleModuleToggle(module.id)}
+                                        disabled={formData.role === 'Admin'}
+                                    />
+                                    <span className="text-sm text-text-primary">{module.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
             </form>
         </Modal>

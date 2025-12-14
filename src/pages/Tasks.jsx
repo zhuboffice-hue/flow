@@ -193,7 +193,24 @@ const Tasks = () => {
             key: 'assignee',
             header: 'Assignee',
             accessor: 'assigneeId',
-            cell: (_, row) => row.assigneeId ? <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs" title={row.assigneeName}>{row.assigneeName?.charAt(0) || 'A'}</div> : <span className="text-muted">-</span>
+            cell: (_, row) => {
+                if (!row.assigneeId) return <span className="text-muted">-</span>;
+                if (row.assignedType === 'team') {
+                    return (
+                        <div className="flex items-center gap-1.5" title={`Team: ${row.assigneeName}`}>
+                            <div className="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center">
+                                <Icon name="Users" size={12} />
+                            </div>
+                            <span className="text-xs text-text-secondary">{row.assigneeName}</span>
+                        </div>
+                    );
+                }
+                return (
+                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs" title={row.assigneeName}>
+                        {row.assigneeName?.charAt(0) || 'A'}
+                    </div>
+                );
+            }
         },
         {
             key: 'priority',
@@ -239,7 +256,7 @@ const Tasks = () => {
     const tableColumns = [
         { key: 'title', header: 'Title', accessor: 'title', cell: (_, row) => <span className="font-medium text-text-primary cursor-pointer hover:underline" onClick={() => handleEditTask(row)}>{row.title}</span> },
         { key: 'project', header: 'Project', accessor: 'projectName', cell: (_, row) => <span className="text-xs text-text-secondary bg-gray-100 px-2 py-1 rounded">{row.projectName}</span> },
-        { key: 'assignee', header: 'Assignee', accessor: 'assigneeId', cell: (_, row) => row.assigneeId ? row.assigneeName : '-' },
+        { key: 'assignee', header: 'Assignee', accessor: 'assigneeId', cell: (_, row) => row.assigneeId ? (row.assignedType === 'team' ? `Team: ${row.assigneeName}` : row.assigneeName) : '-' },
         { key: 'status', header: 'Status', accessor: 'status' },
         { key: 'priority', header: 'Priority', accessor: 'priority' },
         // Removed Estimate and Actual hours as requested

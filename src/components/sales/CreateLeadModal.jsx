@@ -1,49 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, serverTimestamp, query, where } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../ui/Icon';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { useCurrency } from '../../hooks/useCurrency';
-import { CURRENCY_OPTIONS } from '../../lib/models'; // Ensure this is exported from models
+import { CURRENCY_OPTIONS } from '../../lib/models';
 
-const CreateLeadModal = ({ isOpen, onClose, onSuccess }) => { // Changed props
+const CreateLeadModal = ({ isOpen, onClose, onSave, employees = [], initialStage = 'new' }) => {
     const { currentUser } = useAuth();
     const { currency: companyCurrency, getCurrencySymbol } = useCurrency();
     const [loading, setLoading] = useState(false);
-    const [employees, setEmployees] = useState([]);
-    const [formData, setFormData] = useState({
+
+    // Initial State
+    const initialFormState = {
         name: '',
         company: '',
         email: '',
         phone: '',
         source: 'Website',
         value: '',
-        currency: 'USD', // Initial default, will update in useEffect
-        status: 'New Lead',
+        currency: 'USD',
+        status: 'New Lead', // This seems to be a display status, separate from 'stage'
         assigneeId: ''
-    });
+    };
 
-    // Fetch Employees on mount (if open)
+    const [formData, setFormData] = useState(initialFormState);
+
+    // Reset and set defaults when opening
     useEffect(() => {
         if (isOpen) {
-            setFormData(prev => ({ ...prev, currency: companyCurrency })); // Default to company currency
-
-            const fetchEmployees = async () => {
-                if (!currentUser?.companyId) return;
-                try {
-                    const q = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
-                    const querySnapshot = await getDocs(q);
-                    const list = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setEmployees(list);
-                } catch (error) {
-                    console.error("Error fetching employees:", error);
-                }
-            };
-            fetchEmployees();
+            setFormData({
+                ...initialFormState,
+                currency: companyCurrency, // Default to company currency
+                // We don't set 'stage' in formData here because the parent handles the creation logic
+                // But we might want to pass it back if the form allowed changing it.
+                // For now, we'll assume the parent knows the stage if passed via initialStage,
+                // or we can add it to formData if we want the user to pick it (optional).
+            });
         }
-    }, [isOpen, companyCurrency, currentUser]);
+    }, [isOpen, companyCurrency]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -54,29 +49,19 @@ const CreateLeadModal = ({ isOpen, onClose, onSuccess }) => { // Changed props
         e.preventDefault();
         setLoading(true);
         try {
-            await addDoc(collection(db, 'leads'), {
+            // Pass data to parent. Parent handles DB interaction.
+            await onSave({
                 ...formData,
-                companyId: currentUser.companyId,
-                createdAt: serverTimestamp(),
-                createdBy: currentUser?.uid || 'unknown'
+                stage: initialStage // Pass the stage context back
             });
-            if (onSuccess) onSuccess();
+
+            // onSave expected to handle closing if successful, or we close here?
+            // Usually parent closes modal on success. But relying on parent's state update is safer.
+            // For now, let's assume onSave returns promise.
             onClose();
-            // Reset form
-            setFormData({
-                name: '',
-                company: '',
-                email: '',
-                phone: '',
-                source: 'Website',
-                value: '',
-                currency: companyCurrency,
-                status: 'New Lead',
-                assigneeId: ''
-            });
         } catch (error) {
             console.error("Error creating lead:", error);
-            alert("Failed to create lead");
+            // alert("Failed to create lead"); // Let parent handle errors usually, or show UI error
         } finally {
             setLoading(false);
         }

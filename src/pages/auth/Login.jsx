@@ -16,7 +16,11 @@ const Login = () => {
     // Redirect if already logged in
     React.useEffect(() => {
         if (currentUser) {
-            navigate('/app');
+            if (currentUser.role === 'SuperAdmin') {
+                navigate('/app/super-admin');
+            } else {
+                navigate('/app');
+            }
         }
     }, [currentUser, navigate]);
 

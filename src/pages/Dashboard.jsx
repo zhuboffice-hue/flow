@@ -235,7 +235,7 @@ const Dashboard = () => {
                             <option>Last Year</option>
                         </select>
                     </div>
-                    <div className="h-80">
+                    <div className="h-80 w-full" style={{ width: '99%', minWidth: 1 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />

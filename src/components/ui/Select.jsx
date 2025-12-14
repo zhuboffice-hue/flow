@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Icon from './Icon';
 import { cn } from '../../lib/utils';
 
-const Select = ({ value, onChange, options = [], placeholder = "Select...", className = "", label, error }) => {
+const Select = ({ value, onChange, options = [], placeholder = "Select...", className = "", label, error, name }) => {
     const [isOpen, setIsOpen] = useState(false);
     const selectRef = useRef(null);
 
@@ -21,7 +21,7 @@ const Select = ({ value, onChange, options = [], placeholder = "Select...", clas
 
     const handleSelect = (optionValue) => {
         // Mock event object for compatibility with standard onChange handlers
-        onChange({ target: { value: optionValue } });
+        onChange({ target: { name, value: optionValue } });
         setIsOpen(false);
     };
 

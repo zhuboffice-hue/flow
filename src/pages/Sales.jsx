@@ -8,7 +8,7 @@ import ProposalTemplates from '../components/sales/ProposalTemplates';
 
 import CreateLeadModal from '../components/sales/CreateLeadModal';
 
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, where } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, where, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,6 +16,7 @@ const Sales = () => {
     const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [defaultLeadStage, setDefaultLeadStage] = useState('new');
     const [leads, setLeads] = useState([]);
     const [employees, setEmployees] = useState([]);
 
@@ -76,7 +77,7 @@ const Sales = () => {
                 companyId: currentUser.companyId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                stage: 'new', // Default stage
+                stage: data.stage || 'new',
                 priority: 'Medium', // Default priority
             });
 
@@ -98,6 +99,20 @@ const Sales = () => {
         }
     };
 
+    const handleDeleteLead = async (leadId) => {
+        if (!window.confirm("Are you sure you want to delete this lead?")) return;
+        try {
+            await deleteDoc(doc(db, 'leads', leadId));
+        } catch (error) {
+            console.error("Error deleting lead:", error);
+        }
+    };
+
+    const handleOpenCreateModal = (stage = 'new') => {
+        setDefaultLeadStage(stage);
+        setIsCreateModalOpen(true);
+    };
+
     return (
         <ThreePaneLayout>
             <div className="flex flex-col h-full bg-background">
@@ -105,7 +120,7 @@ const Sales = () => {
                 <div className="bg-surface border-b border-border p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h1 className="text-h2 font-bold text-text-primary">Sales & CRM</h1>
                     <div className="flex gap-3 w-full md:w-auto">
-                        <Button onClick={() => setIsCreateModalOpen(true)} className="w-full md:w-auto justify-center whitespace-nowrap">
+                        <Button onClick={() => handleOpenCreateModal('new')} className="w-full md:w-auto justify-center whitespace-nowrap">
                             <Icon name="Plus" size={16} className="mr-2" /> New Lead
                         </Button>
                     </div>
@@ -132,15 +147,24 @@ const Sales = () => {
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto bg-surface-secondary/30 p-6">
                     {activeTab === 'dashboard' && <SalesDashboard leads={leads} />}
-                    {activeTab === 'pipeline' && <PipelineBoard leads={leads} employees={employees} />}
+                    {activeTab === 'pipeline' && (
+                        <PipelineBoard
+                            leads={leads}
+                            employees={employees}
+                            onAddLead={handleOpenCreateModal}
+                            onDeleteLead={handleDeleteLead}
+                        />
+                    )}
                     {activeTab === 'proposals' && <ProposalTemplates />}
                 </div>
             </div>
             {isCreateModalOpen && (
                 <CreateLeadModal
+                    isOpen={isCreateModalOpen}
                     onClose={() => setIsCreateModalOpen(false)}
                     onSave={handleCreateLead}
                     employees={employees}
+                    initialStage={defaultLeadStage}
                 />
             )}
         </ThreePaneLayout>

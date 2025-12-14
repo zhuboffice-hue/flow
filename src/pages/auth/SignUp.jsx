@@ -10,10 +10,14 @@ const SignUp = () => {
     const [searchParams] = useSearchParams();
     const plan = searchParams.get('plan') || 'free';
 
+    const companyId = searchParams.get('companyId');
+    const invitedEmail = searchParams.get('email') || '';
+    const invitedName = searchParams.get('name') || '';
+
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
+        name: invitedName,
+        email: invitedEmail,
         password: '',
         companyName: '',
         industry: 'Technology',
@@ -31,7 +35,9 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (step === 1) {
+
+        // If inviting to existing company, skip step 2 check
+        if (!companyId && step === 1) {
             setStep(2);
             return;
         }
@@ -44,7 +50,7 @@ const SignUp = () => {
                 industry: formData.industry,
                 size: formData.size,
                 plan
-            });
+            }, companyId);
             navigate('/app');
         } catch (err) {
             console.error("Signup error:", err);

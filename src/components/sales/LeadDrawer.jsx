@@ -16,9 +16,156 @@ const LeadDrawer = ({ lead, onClose, employees = [] }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [assigneeId, setAssigneeId] = useState(lead?.assigneeId || '');
 
-    // ... (rest of state)
+    const [note, setNote] = useState(lead?.notes || '');
+    const [commType, setCommType] = useState('Call');
+    const [commNote, setCommNote] = useState('');
+    const [activities, setActivities] = useState([]);
+    const [newTask, setNewTask] = useState('');
+    const [newTaskDate, setNewTaskDate] = useState('');
+    const [tasks, setTasks] = useState([]);
+    const [files, setFiles] = useState([]);
+    const [uploading, setUploading] = useState(false);
 
-    // ... (rest of effects and handlers)
+    useEffect(() => {
+        if (!lead?.id) return;
+        setNote(lead.notes || '');
+        setAssigneeId(lead.assigneeId || '');
+
+        // Fetch Activities
+        const qActivities = query(collection(db, 'activities'), where('leadId', '==', lead.id));
+        const unsubActivities = onSnapshot(qActivities, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sort
+            data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setActivities(data);
+        });
+
+        // Fetch Tasks
+        const qTasks = query(collection(db, 'tasks'), where('leadId', '==', lead.id));
+        const unsubTasks = onSnapshot(qTasks, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setTasks(data);
+        });
+
+        // Fetch Files
+        const qFiles = query(collection(db, 'files'), where('leadId', '==', lead.id));
+        const unsubFiles = onSnapshot(qFiles, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            setFiles(data);
+        });
+
+        return () => {
+            unsubActivities();
+            unsubTasks();
+            unsubFiles();
+        };
+    }, [lead]);
+
+    const handleAssigneeChange = async (e) => {
+        const newId = e.target.value;
+        setAssigneeId(newId);
+        try {
+            await updateDoc(doc(db, 'leads', lead.id), {
+                assigneeId: newId,
+                updatedAt: serverTimestamp()
+            });
+            // Log activity
+            await addDoc(collection(db, 'activities'), {
+                leadId: lead.id,
+                type: 'System',
+                content: `Assignee changed to ${employees.find(e => e.id === newId)?.name || 'Unassigned'}`,
+                createdAt: serverTimestamp(),
+                createdBy: currentUser.uid,
+                createdByName: currentUser.displayName || 'User'
+            });
+        } catch (error) {
+            console.error("Error updating assignee:", error);
+        }
+    };
+
+    const handleSaveNote = async () => {
+        try {
+            await updateDoc(doc(db, 'leads', lead.id), {
+                notes: note,
+                updatedAt: serverTimestamp()
+            });
+            alert('Note saved!');
+        } catch (error) {
+            console.error("Error saving note:", error);
+        }
+    };
+
+    const handleLogActivity = async () => {
+        if (!commNote.trim()) return;
+        try {
+            await addDoc(collection(db, 'activities'), {
+                leadId: lead.id,
+                type: commType,
+                content: commNote,
+                createdAt: serverTimestamp(),
+                createdBy: currentUser.uid,
+                createdByName: currentUser.displayName || 'User'
+            });
+            setCommNote('');
+        } catch (error) {
+            console.error("Error logging activity:", error);
+        }
+    };
+
+    const handleAddTask = async () => {
+        if (!newTask.trim()) return;
+        try {
+            await addDoc(collection(db, 'tasks'), {
+                leadId: lead.id,
+                title: newTask,
+                dueDate: newTaskDate ? new Date(newTaskDate) : null,
+                completed: false,
+                createdAt: serverTimestamp(),
+                createdBy: currentUser.uid
+            });
+            setNewTask('');
+            setNewTaskDate('');
+        } catch (error) {
+            console.error("Error adding task:", error);
+        }
+    };
+
+    const toggleTask = async (taskId, currentStatus) => {
+        try {
+            await updateDoc(doc(db, 'tasks', taskId), {
+                completed: !currentStatus
+            });
+        } catch (error) {
+            console.error("Error toggling task:", error);
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const url = await uploadToCloudinary(file);
+            await addDoc(collection(db, 'files'), {
+                leadId: lead.id,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                url: url,
+                createdAt: serverTimestamp(),
+                createdBy: currentUser.uid
+            });
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            alert("Upload failed");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
 
     if (!lead) return null;
 

@@ -129,7 +129,7 @@ const SalesDashboard = ({ leads = [] }) => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-surface p-6 rounded-lg border border-border">
                     <h3 className="font-bold text-lg text-text-primary mb-6">Revenue Trend (Won Deals)</h3>
-                    <div className="h-64 w-full text-xs">
+                    <div className="h-64 w-full min-w-0 text-xs">
                         {revenueData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={revenueData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -152,7 +152,7 @@ const SalesDashboard = ({ leads = [] }) => {
                 </div>
                 <div className="bg-surface p-6 rounded-lg border border-border">
                     <h3 className="font-bold text-lg text-text-primary mb-6">Lead Distribution</h3>
-                    <div className="h-64 w-full text-xs">
+                    <div className="h-64 w-full min-w-0 text-xs">
                         {funnelData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart layout="vertical" data={funnelData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>

@@ -148,7 +148,7 @@ const TeamDashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-surface p-6 rounded-lg border border-border">
                         <h3 className="text-lg font-bold text-text-primary mb-6">Productivity Trend (Tasks Completed)</h3>
-                        <div className="h-80">
+                        <div className="h-80 w-full" style={{ width: '99%', minWidth: 1 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={productivityData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -163,7 +163,7 @@ const TeamDashboard = () => {
 
                     <div className="bg-surface p-6 rounded-lg border border-border">
                         <h3 className="text-lg font-bold text-text-primary mb-6">Staff Workload & Progress</h3>
-                        <div className="h-80">
+                        <div className="h-80 w-full" style={{ width: '99%', minWidth: 1 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={performanceData} layout="vertical">
                                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />

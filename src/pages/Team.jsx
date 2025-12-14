@@ -20,16 +20,31 @@ const Team = () => {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
     const [selectedRecipient, setSelectedRecipient] = useState(null);
+
     const [filterDepartment, setFilterDepartment] = useState('All');
+    const [departments, setDepartments] = useState([]);
 
     useEffect(() => {
         if (!currentUser?.companyId) return;
-        const q = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+
+        // Fetch Employees
+        const qEmployees = query(collection(db, 'employees'), where('companyId', '==', currentUser.companyId));
+        const unsubscribeEmployees = onSnapshot(qEmployees, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setEmployees(data);
         });
-        return () => unsubscribe();
+
+        // Fetch Departments
+        const qDepartments = query(collection(db, 'departments'), where('companyId', '==', currentUser.companyId));
+        const unsubscribeDepartments = onSnapshot(qDepartments, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setDepartments(data);
+        });
+
+        return () => {
+            unsubscribeEmployees();
+            unsubscribeDepartments();
+        };
     }, [currentUser]);
 
     const filteredEmployees = filterDepartment === 'All'
@@ -77,16 +92,25 @@ const Team = () => {
 
                 {/* Filters */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {['All', 'Engineering', 'Design', 'Product', 'Marketing', 'Sales'].map(dept => (
+                    <button
+                        onClick={() => setFilterDepartment('All')}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${filterDepartment === 'All'
+                            ? 'bg-primary text-white'
+                            : 'bg-surface border border-border text-text-secondary hover:bg-surface-hover'
+                            }`}
+                    >
+                        All
+                    </button>
+                    {departments.map(dept => (
                         <button
-                            key={dept}
-                            onClick={() => setFilterDepartment(dept)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${filterDepartment === dept
+                            key={dept.id}
+                            onClick={() => setFilterDepartment(dept.name)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${filterDepartment === dept.name
                                 ? 'bg-primary text-white'
                                 : 'bg-surface border border-border text-text-secondary hover:bg-surface-hover'
                                 }`}
                         >
-                            {dept}
+                            {dept.name}
                         </button>
                     ))}
                 </div>

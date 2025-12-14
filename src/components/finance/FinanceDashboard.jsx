@@ -228,7 +228,7 @@ const FinanceDashboard = () => {
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-bold text-lg text-text-primary">Revenue vs Expenses</h3>
                     </div>
-                    <div className="h-64 w-full text-xs">
+                    <div className="h-64 w-full min-w-0 text-xs">
                         {financialHistory.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={financialHistory} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -253,7 +253,7 @@ const FinanceDashboard = () => {
                 </div>
                 <div className="bg-surface p-6 rounded-lg border border-border">
                     <h3 className="font-bold text-lg text-text-primary mb-6">Profitability by Project</h3>
-                    <div className="h-64 w-full text-xs">
+                    <div className="h-64 w-full min-w-0 text-xs">
                         {projectProfitability.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={projectProfitability} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>

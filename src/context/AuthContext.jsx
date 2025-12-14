@@ -7,7 +7,7 @@ import {
     onAuthStateChanged,
     updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../lib/firebase';
 
 const AuthContext = createContext();
@@ -18,29 +18,34 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const signup = async (email, password, name, companyDetails) => {
+    const signup = async (email, password, name, companyDetails, existingCompanyId = null) => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
         await updateProfile(user, { displayName: name });
 
-        // Create Company Document
-        const companyRef = doc(collection(db, 'companies'));
-        await setDoc(companyRef, {
-            name: companyDetails.name,
-            industry: companyDetails.industry,
-            size: companyDetails.size,
-            plan: companyDetails.plan || 'free',
-            createdAt: new Date(),
-            ownerId: user.uid
-        });
+        let companyId = existingCompanyId;
+
+        if (!companyId) {
+            // Create Company Document
+            const companyRef = doc(collection(db, 'companies'));
+            await setDoc(companyRef, {
+                name: companyDetails.name,
+                industry: companyDetails.industry,
+                size: companyDetails.size,
+                plan: companyDetails.plan || 'free',
+                createdAt: new Date(),
+                ownerId: user.uid
+            });
+            companyId = companyRef.id;
+        }
 
         // Create User Document
         await setDoc(doc(db, 'users', user.uid), {
             name,
             email,
             role: 'Admin',
-            companyId: companyRef.id,
+            companyId: companyId,
             createdAt: new Date()
         });
 
@@ -111,8 +116,22 @@ export const AuthProvider = ({ children }) => {
                                 if (companyDoc.exists()) {
                                     companyData = companyDoc.data();
                                 }
+
+                                // Load Employee Permissions
+                                const qEmp = query(
+                                    collection(db, 'employees'),
+                                    where('email', '==', userData.email),
+                                    where('companyId', '==', userData.companyId)
+                                );
+                                const empSnap = await getDocs(qEmp);
+                                if (!empSnap.empty) {
+                                    const empData = empSnap.docs[0].data();
+                                    if (empData.allowedModules) {
+                                        userData.allowedModules = empData.allowedModules;
+                                    }
+                                }
                             } catch (error) {
-                                console.error("Error fetching company:", error);
+                                console.error("Error fetching company/employee:", error);
                             }
                         }
 

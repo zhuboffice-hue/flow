@@ -3,16 +3,17 @@ import LeftSidebar from './LeftSidebar';
 import Topbar from './Topbar';
 import { cn } from '../../lib/utils';
 
-const ThreePaneLayout = ({ children, className }) => {
+const ThreePaneLayout = ({ children, className, hideSidebar = false }) => {
     // Initialize sidebar state based on screen width
-    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+    // If hidden by default, set to false
+    const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar && window.innerWidth >= 768);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     React.useEffect(() => {
         const handleResize = () => {
             const mobile = window.innerWidth < 768;
             setIsMobile(mobile);
-            if (!mobile) {
+            if (!mobile && !hideSidebar) {
                 setIsSidebarOpen(true);
             } else {
                 setIsSidebarOpen(false);
@@ -21,12 +22,12 @@ const ThreePaneLayout = ({ children, className }) => {
 
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [hideSidebar]);
 
     return (
         <div className="flex h-screen w-full bg-background overflow-hidden relative">
             {/* Mobile Sidebar Overlay */}
-            {isMobile && isSidebarOpen && (
+            {isMobile && isSidebarOpen && !hideSidebar && (
                 <div
                     className="fixed inset-0 bg-black/50 z-40"
                     onClick={() => setIsSidebarOpen(false)}
@@ -34,23 +35,24 @@ const ThreePaneLayout = ({ children, className }) => {
             )}
 
             {/* Left Pane: Sidebar */}
-            {/* On mobile: fixed, z-50. On desktop: relative, flex-shrink-0 */}
-            <div className={cn(
-                "transition-all duration-300 ease-in-out h-full bg-background border-r border-border",
-                isMobile ? "fixed left-0 top-0 z-50 shadow-xl" : "relative flex-shrink-0",
-                !isSidebarOpen && !isMobile && "hidden", // Hidden on desktop when collapsed
-                isMobile && !isSidebarOpen && "-translate-x-full" // Slide out on mobile
-            )}>
-                <LeftSidebar
-                    className="h-full"
-                    onCollapse={() => setIsSidebarOpen(false)}
-                />
-            </div>
+            {!hideSidebar && (
+                <div className={cn(
+                    "transition-all duration-300 ease-in-out h-full bg-background border-r border-border",
+                    isMobile ? "fixed left-0 top-0 z-50 shadow-xl" : "relative flex-shrink-0",
+                    !isSidebarOpen && !isMobile && "hidden", // Hidden on desktop when collapsed
+                    isMobile && !isSidebarOpen && "-translate-x-full" // Slide out on mobile
+                )}>
+                    <LeftSidebar
+                        className="h-full"
+                        onCollapse={() => setIsSidebarOpen(false)}
+                    />
+                </div>
+            )}
 
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 <Topbar
-                    showMenuTrigger={!isSidebarOpen || isMobile}
+                    showMenuTrigger={(!isSidebarOpen || isMobile) && !hideSidebar}
                     onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 />
 

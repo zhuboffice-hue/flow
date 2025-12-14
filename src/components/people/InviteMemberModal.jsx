@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
+import MultiSelect from '../ui/MultiSelect';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
+import { APP_MODULES } from '../../lib/modules';
 
 const InviteMemberModal = ({ isOpen, onClose, onSuccess }) => {
     const { currentUser } = useAuth();
@@ -14,7 +16,7 @@ const InviteMemberModal = ({ isOpen, onClose, onSuccess }) => {
         email: '',
         name: '',
         role: 'Viewer',
-        department: 'Engineering'
+        allowedModules: []
     });
     const [loading, setLoading] = useState(false);
     const [inviteLink, setInviteLink] = useState('');
@@ -45,6 +47,8 @@ const InviteMemberModal = ({ isOpen, onClose, onSuccess }) => {
             await addDoc(collection(db, 'employees'), {
                 ...formData,
                 companyId: currentUser.companyId,
+                department: null,
+                teamId: null,
                 status: 'Invited',
                 joinedAt: new Date(),
                 avatar: null,
@@ -65,7 +69,8 @@ const InviteMemberModal = ({ isOpen, onClose, onSuccess }) => {
         navigator.clipboard.writeText(inviteLink);
         alert("Invite link copied to clipboard!");
         onClose();
-        setFormData({ email: '', name: '', role: 'Viewer', department: 'Engineering' });
+        onClose();
+        setFormData({ email: '', name: '', role: 'Viewer', allowedModules: [] });
         setInviteLink('');
     };
 
@@ -127,19 +132,15 @@ const InviteMemberModal = ({ isOpen, onClose, onSuccess }) => {
                             { value: 'Viewer', label: 'Viewer' }
                         ]}
                     />
-                    <Select
-                        label="Department"
-                        value={formData.department}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        options={[
-                            { value: 'Engineering', label: 'Engineering' },
-                            { value: 'Design', label: 'Design' },
-                            { value: 'Product', label: 'Product' },
-                            { value: 'Marketing', label: 'Marketing' },
-                            { value: 'Sales', label: 'Sales' },
-                            { value: 'HR', label: 'HR' }
-                        ]}
+
+                    <MultiSelect
+                        label="Allowed Modules"
+                        value={formData.allowedModules}
+                        onChange={(vals) => setFormData({ ...formData, allowedModules: vals })}
+                        options={APP_MODULES.map(m => ({ value: m.id, label: m.label }))}
+                        placeholder="Select accessible modules..."
                     />
+
                 </div>
             )}
         </Modal>

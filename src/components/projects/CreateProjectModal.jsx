@@ -11,12 +11,16 @@ import MultiSelect from '../ui/MultiSelect';
 import TextArea from '../ui/TextArea';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useAuth } from '../../context/AuthContext';
+import ClientFormModal from '../clients/ClientFormModal';
+import Icon from '../ui/Icon';
 
 const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) => {
     const { currentUser } = useAuth(); // Get currentUser
     const { currency: companyCurrency } = useCurrency();
     const [newProject, setNewProject] = useState(initialProjectState);
+
     const [loading, setLoading] = useState(false);
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [clients, setClients] = useState([]);
     const [users, setUsers] = useState([]);
 
@@ -106,6 +110,43 @@ const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) =
         }
     };
 
+    const handleClientSuccess = (newClientData) => {
+        // Since ClientFormModal doesn't return ID directly in onSubmit (it usually handles its own saving),
+        // we might need to listen to the clients list update or handle it differently.
+        // However, ClientFormModal props are (isOpen, onClose, onSubmit, initialData).
+        // Let's check ClientFormModal usage.
+
+        // Wait, ClientFormModal usually takes an onSubmit that handles the API call? 
+        // Or does it handle it internally?
+        // Looking at ClientFormModal.jsx:
+        // const handleSubmit = (e) => { e.preventDefault(); onSubmit(formData); onClose(); };
+        // So it passes pure form data to the parent.
+
+        // We need to save the client here then.
+        handleSaveClient(newClientData);
+    };
+
+    const handleSaveClient = async (clientData) => {
+        try {
+            const docRef = await addDoc(collection(db, 'clients'), {
+                ...clientData,
+                companyId: currentUser.companyId,
+                createdAt: new Date()
+            });
+
+            // Add to local list immediately to avoid waiting for re-fetch if not using real-time listener here
+            const newClient = { id: docRef.id, name: clientData.name };
+            setClients(prev => [...prev, newClient]);
+
+            // Auto-select
+            handleChange('clientId', docRef.id);
+            setIsClientModalOpen(false);
+        } catch (error) {
+            console.error("Error creating client:", error);
+        }
+    };
+
+
     return (
         <Modal
             isOpen={isOpen}
@@ -123,13 +164,29 @@ const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) =
             <form className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     {!clientId && (
-                        <Select
-                            label="Client"
-                            value={newProject.clientId}
-                            onChange={(e) => handleChange('clientId', e.target.value)}
-                            options={clients.map(c => ({ value: c.id, label: c.name }))}
-                            placeholder="Select Client"
-                        />
+
+                        <div className="flex items-end gap-2">
+                            <div className="flex-1">
+                                <Select
+                                    label="Client"
+                                    name="clientId"
+                                    value={newProject.clientId}
+                                    onChange={(e) => handleChange('clientId', e.target.value)}
+                                    options={clients.map(c => ({ value: c.id, label: c.name }))}
+                                    placeholder="Select Client"
+                                />
+                            </div>
+                            <Button
+                                type="button" // Prevent form submission
+                                variant="outline"
+                                size="icon"
+                                className="mb-[1px]" // Align with input
+                                onClick={() => setIsClientModalOpen(true)}
+                                title="Add New Client"
+                            >
+                                <Icon name="Plus" size={18} />
+                            </Button>
+                        </div>
                     )}
                     <Input
                         label="Project Name"
@@ -213,6 +270,12 @@ const CreateProjectModal = ({ isOpen, onClose, clientId, project, onSuccess }) =
                     />
                 </div>
             </form>
+
+            <ClientFormModal
+                isOpen={isClientModalOpen}
+                onClose={() => setIsClientModalOpen(false)}
+                onSubmit={handleSaveClient}
+            />
         </Modal>
     );
 };

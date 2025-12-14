@@ -48,7 +48,8 @@ const EmployeeProfile = () => {
                 department: updatedData.department,
                 availability: updatedData.availability,
                 workload: updatedData.workload,
-                skills: updatedData.skills
+                skills: updatedData.skills,
+                allowedModules: updatedData.allowedModules || []
             });
             setEmployee(prev => ({ ...prev, ...updatedData }));
             // Optional: show toast

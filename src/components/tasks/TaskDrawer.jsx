@@ -21,19 +21,23 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
     const [activeTab, setActiveTab] = useState('details');
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState([]);
+    const [teams, setTeams] = useState([]);
     const [projectName, setProjectName] = useState('');
+    const [assignType, setAssignType] = useState('user'); // 'user' or 'team'
 
     const isNewTask = !task?.id;
 
     useEffect(() => {
         if (task) {
             setFormData(task);
+            setAssignType(task.assignedType || 'user');
         } else {
             setFormData({
                 ...initialTaskState,
                 projectId,
                 status: initialStatus || 'To Do'
             });
+            setAssignType('user');
         }
     }, [task, projectId, isOpen, initialStatus]);
 
@@ -52,7 +56,13 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
                     email: doc.data().email,
                     role: doc.data().role
                 }));
+
                 setEmployees(employeeList);
+
+                // Fetch Teams
+                const teamsQ = query(collection(db, 'teams'), where('companyId', '==', currentUser.companyId));
+                const teamsSnap = await getDocs(teamsQ);
+                setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
                 // Fetch Project Name if projectId is available
                 if (projectId) {
@@ -91,12 +101,21 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
 
     const handleAssigneeChange = (e) => {
         const assigneeId = e.target.value;
-        const assignee = employees.find(emp => emp.id === assigneeId);
-        setFormData(prev => ({
-            ...prev,
-            assigneeId: assigneeId,
-            assigneeName: assignee ? assignee.name : ''
-        }));
+        if (assignType === 'user') {
+            const assignee = employees.find(emp => emp.id === assigneeId);
+            setFormData(prev => ({
+                ...prev,
+                assigneeId: assigneeId,
+                assigneeName: assignee ? assignee.name : ''
+            }));
+        } else {
+            const team = teams.find(t => t.id === assigneeId);
+            setFormData(prev => ({
+                ...prev,
+                assigneeId: assigneeId,
+                assigneeName: team ? team.name : ''
+            }));
+        }
     };
 
     const handleSave = async () => {
@@ -118,6 +137,7 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
             } else {
                 const docRef = await addDoc(collection(db, 'projects', finalProjectId, 'tasks'), {
                     ...formData,
+                    assignedType: assignType,
                     createdAt: new Date(),
                     updatedAt: new Date()
                 });
@@ -127,7 +147,7 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
             // Handle Assignment Logic
             const isNewAssignment = formData.assigneeId && (!task || task.assigneeId !== formData.assigneeId);
 
-            if (isNewAssignment) {
+            if (isNewAssignment && assignType === 'user') {
                 const assignee = employees.find(e => e.id === formData.assigneeId);
 
                 // 1. Add assignee to Project Team
@@ -253,18 +273,44 @@ const TaskDrawer = ({ isOpen, onClose, projectId, task, initialStatus, onSave })
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-text-secondary mb-1">Assignee</label>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="block text-sm font-medium text-text-secondary">Assignee</label>
+                                        <div className="flex bg-gray-100 rounded p-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setAssignType('user'); setFormData(p => ({ ...p, assigneeId: '', assigneeName: '' })); }}
+                                                className={`px-2 py-0.5 text-xs rounded ${assignType === 'user' ? 'bg-white shadow-sm text-primary font-medium' : 'text-text-secondary'}`}
+                                            >
+                                                Person
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setAssignType('team'); setFormData(p => ({ ...p, assigneeId: '', assigneeName: '' })); }}
+                                                className={`px-2 py-0.5 text-xs rounded ${assignType === 'team' ? 'bg-white shadow-sm text-primary font-medium' : 'text-text-secondary'}`}
+                                            >
+                                                Team
+                                            </button>
+                                        </div>
+                                    </div>
                                     <select
                                         className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:border-primary transition-colors text-sm"
                                         value={formData.assigneeId || ''}
                                         onChange={handleAssigneeChange}
                                     >
                                         <option value="">Unassigned</option>
-                                        {employees.map(emp => (
-                                            <option key={emp.id} value={emp.id}>
-                                                {emp.name}
-                                            </option>
-                                        ))}
+                                        {assignType === 'user' ? (
+                                            employees.map(emp => (
+                                                <option key={emp.id} value={emp.id}>
+                                                    {emp.name}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            teams.map(team => (
+                                                <option key={team.id} value={team.id}>
+                                                    {team.name}
+                                                </option>
+                                            ))
+                                        )}
                                     </select>
                                 </div>
                                 <Input

@@ -8,7 +8,7 @@ import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
 
-const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead, currentUser }) => {
+const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead, currentUser, onAddLead, onDeleteLead, employees }) => {
     const { formatCurrency, convertAmount } = useCurrency();
 
     const handleDragOver = (e) => {
@@ -34,7 +34,7 @@ const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead,
                     <h3 className="font-bold text-sm text-text-primary uppercase">{title}</h3>
                     <span className="bg-surface text-xs font-medium px-2 py-0.5 rounded-full text-text-secondary border border-border">{count}</span>
                 </div>
-                <button className="text-text-secondary hover:text-primary">
+                <button className="text-text-secondary hover:text-primary" onClick={() => onAddLead(stageId)}>
                     <Icon name="Plus" size={16} />
                 </button>
             </div>
@@ -43,6 +43,7 @@ const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead,
                     const isAssignee = lead.assigneeId === currentUser?.uid;
                     const isAdmin = currentUser?.role === 'Admin';
                     const canDrag = isAssignee || isAdmin;
+                    const assigneeName = employees.find(e => e.id === lead.assigneeId)?.name || 'Unassigned';
 
                     // Parse value to number
                     const val = parseFloat((lead.value || '0').replace(/[^0-9.-]+/g, ""));
@@ -67,8 +68,14 @@ const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead,
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <h4 className="font-bold text-text-primary text-sm">{lead.company}</h4>
-                                <button className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-primary transition-opacity">
-                                    <Icon name="MoreHorizontal" size={16} />
+                                <button
+                                    className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-danger transition-opacity"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteLead(lead.id);
+                                    }}
+                                >
+                                    <Icon name="Trash2" size={16} />
                                 </button>
                             </div>
                             <p className="text-xs text-text-secondary mb-3">{lead.name}</p>
@@ -83,7 +90,7 @@ const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead,
                             <div className="mt-3 pt-3 border-t border-border flex justify-between items-center text-xs text-text-secondary">
                                 <div className="flex items-center gap-1">
                                     <Icon name="User" size={12} />
-                                    <span>{lead.assignee || 'Unassigned'}</span>
+                                    <span>{assigneeName}</span>
                                 </div>
                                 <span>{lead.lastActivity}</span>
                             </div>
@@ -95,7 +102,7 @@ const PipelineColumn = ({ title, count, leads, onLeadClick, stageId, onDropLead,
     );
 };
 
-const PipelineBoard = ({ leads = [], employees = [] }) => {
+const PipelineBoard = ({ leads = [], employees = [], onAddLead, onDeleteLead }) => {
     const { currentUser } = useAuth();
     const [selectedLead, setSelectedLead] = useState(null);
 
@@ -163,6 +170,9 @@ const PipelineBoard = ({ leads = [], employees = [] }) => {
                                 onLeadClick={setSelectedLead}
                                 onDropLead={handleDropLead}
                                 currentUser={currentUser}
+                                onAddLead={onAddLead}
+                                onDeleteLead={onDeleteLead}
+                                employees={employees}
                             />
                         </div>
                     ))}
